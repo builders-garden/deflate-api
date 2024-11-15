@@ -1,7 +1,7 @@
 import { PrivyClient, User } from "@privy-io/server-auth";
 import { environment } from "../config/environment";
 
-if (!process.env.NEXT_PUBLIC_PRIVY_APP_ID) {
+if (!process.env.PRIVY_APP_ID) {
   throw new Error("Please provide your Privy App ID");
 }
 
@@ -34,7 +34,9 @@ export const verifyAuthToken = async (
   }
 };
 
-export const getPrivyUserByIdToken = async (idToken: string): Promise<User | null> => {
+export const getPrivyUserByIdToken = async (
+  idToken: string
+): Promise<User | null> => {
   return await privy.getUser({ idToken });
 };
 
