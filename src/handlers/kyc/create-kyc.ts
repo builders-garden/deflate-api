@@ -3,10 +3,11 @@ import {
   createKYCLink,
   fetchKYCLinkById,
 } from "../../services/peanut";
+import { setCustomMetadata } from "../../services/privy";
 
 export const createKYC = async (req: Request, res: Response) => {
   const { fullName, address, city, postalCode, country } = req.body;
-  const user = req.user;
+  const user = req.user!;
   if (user?.customMetadata.bridgeKycLinkId) {
     const kyc = await fetchKYCLinkById(user.customMetadata.bridgeKycLinkId);
     return res.json(kyc);
@@ -17,6 +18,16 @@ export const createKYC = async (req: Request, res: Response) => {
     user?.email?.address!,
     country !== "USA"
   );
+
+  await setCustomMetadata(user.id, {
+    ...user.customMetadata,
+    bridgeKycLinkId: kycLink.id,
+    country,
+    city,
+    postalCode,
+    address,
+    fullName,
+  });
 
   res.json(kycLink);
 };
