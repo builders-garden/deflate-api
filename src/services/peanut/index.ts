@@ -23,10 +23,10 @@ const baseUrl = environment.PEANUT_API_BASE_URL;
 
 const redirectUri = environment.PEANUT_REDIRECT_URI;
 
-export const checkKYCStatus = async (
-  kybLinkId: string
+export const fetchKYCLinkById = async (
+  kycLinkId: string
 ): Promise<BridgeKycLink> => {
-  const url = new URL(`${baseUrl}/bridge/kyc-links/${kybLinkId}`);
+  const url = new URL(`${baseUrl}/bridge/kyc-links/${kycLinkId}`);
   const response = await fetch(url.toString(), {
     method: "GET",
     headers: {
@@ -38,7 +38,7 @@ export const checkKYCStatus = async (
   return data as BridgeKycLink;
 };
 
-export const getKYCLink = async (
+export const createKYCLink = async (
   fullName: string,
   email: string,
   isEEA = false

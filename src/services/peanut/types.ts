@@ -67,7 +67,7 @@ export enum BridgeAccountOwnerType {
 
 export enum BridgeAccountType {
   IBAN = "iban",
-  USD = "us",
+  US = "us",
 }
 
 export interface BridgeExternalAccountCamel {

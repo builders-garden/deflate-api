@@ -37,3 +37,7 @@ export const verifyAuthToken = async (
 export const getPrivyUserByIdToken = async (idToken: string): Promise<User | null> => {
   return await privy.getUser({ idToken });
 };
+
+export const setCustomMetadata = async (userId: string, metadata: any) => {
+  return await privy.setCustomMetadata(userId, metadata);
+};

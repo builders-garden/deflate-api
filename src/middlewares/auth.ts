@@ -13,14 +13,14 @@ export const authMiddleware = async (
       return res.status(401).json({ error: 'No authorization header' });
     }
 
-    const token = authHeader.split(' ')[1];
-    const verified = await verifyAuthToken(token);
+    const token = authHeader.split(" ")[1];
+    const { user, isValid } = await verifyAuthToken(token);
 
-    if (!verified) {
+    if (!isValid) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    req.user = verified.user;
+    req.user = user;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Authentication failed' });
