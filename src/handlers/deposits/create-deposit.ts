@@ -36,36 +36,43 @@ export const createDeposit = async (req: Request, res: Response) => {
       strategy,
     });
 
-    const { data } = depositStrategy;
+    const { success, data } = depositStrategy;
+    const totalTransactions = data?.totalTransactions;
+    const transactions = data?.transactions;
 
-    const chain = data?.chainId === 8453 ? base : polygon;
-    const deflatePortalAddress =
-      data?.chainId === 8453
-        ? BASE_DEFLATE_PORTAL_ADDRESS
-        : POLYGON_DEFLATE_PORTAL_ADDRESS;
+    console.log(transactions, "transactions------");
 
-    const client = createWalletClient({
-      account,
-      chain: chain,
-      transport: http(),
-    });
-    const publicClient = createPublicClient({
-      chain: chain,
-      transport: http(),
-    });
+    // Execute each transaction sequentially
+    const txResults = [];
+    for (const tx of transactions!) {
+        const chain = tx.chainId === 8453 ? base : polygon;
+        const deflatePortalAddress = tx.chainId === 8453 
+            ? process.env.BASE_DEFLATE_PORTAL_ADDRESS 
+            : process.env.POLYGON_DEFLATE_PORTAL_ADDRESS;
 
-    const { request } = await publicClient.simulateContract({
-      account,
-      address: deflatePortalAddress as `0x${string}`,
-      abi: DEFLATE_PORTAL_ABI,
-      functionName: "executeStrategy",
-      args: [data?.data],
-    });
-    const txReceipt = await client.writeContract(request);
-    // Wait for transaction to be mined
-    const txReceiptData = await publicClient.waitForTransactionReceipt({
-      hash: txReceipt,
-    });
+        const client = createWalletClient({
+            account,
+            chain: chain,
+            transport: http(),
+        });
+        const publicClient = createPublicClient({
+            chain: chain,
+            transport: http(),
+        });
+
+        const { request } = await publicClient.simulateContract({
+            account,
+            address: deflatePortalAddress as `0x${string}`,
+            abi: DEFLATE_PORTAL_ABI,
+            functionName: 'executeStrategy',
+            args: [tx.data],
+        });
+        const txReceipt = await client.writeContract(request);
+        const txReceiptData = await publicClient.waitForTransactionReceipt({
+            hash: txReceipt,
+        });
+        txResults.push(txReceiptData);
+    }
 
     // Temporary response
     res.json({
@@ -76,7 +83,7 @@ export const createDeposit = async (req: Request, res: Response) => {
         strategy,
         timestamp: new Date().toISOString(),
         status: "pending",
-        txHash: txReceiptData.transactionHash,
+        txHashes: txResults.map(tx => tx.transactionHash),
       },
     });
   } catch (error) {

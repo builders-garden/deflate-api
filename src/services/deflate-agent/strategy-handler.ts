@@ -1,5 +1,5 @@
 import openai, { OpenAI } from "openai";
-import { environment } from "../../config/environment";
+import { TransactionResponse } from "./Brian-api-interface";
 
 interface DepositParams {
   userAddress: string;
@@ -10,329 +10,243 @@ interface DepositParams {
 interface StrategyResponse {
   success: boolean;
   data?: {
-    data?: string;
-    strategy: number;
-    details: string;
-    chainId: number;
+    transactions: Array<{
+      data?: string;
+      strategy: number;
+      details: string;
+      chainId: number;
+    }>;
+    totalTransactions: number;
   };
   error?: string;
 }
+
+const findStableLiquidityCross = async (userAddress: string) => {
+    const baseUsdcLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
+        },
+        body: JSON.stringify({
+            prompt: "Give me investment advice for usdc on base with liquidity > 5 milions",
+            address: userAddress,
+        })
+    }).then(res => res.json()) as TransactionResponse;
+
+    const polygonUsdcLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
+        },
+        body: JSON.stringify({
+            prompt: "Give me investment advice for usdc on polygon with liquidity > 5 milions",
+            address: userAddress,
+        })
+    }).then(res => res.json()) as TransactionResponse;
+
+    return {
+        baseStrategy: {
+            description: baseUsdcLendingApy.result[0].data.description,
+            chainId: baseUsdcLendingApy.result[0].data.fromChainId
+        },
+        polygonStrategy: {
+            description: polygonUsdcLendingApy.result[0].data.description,
+            chainId: polygonUsdcLendingApy.result[0].data.fromChainId
+        }
+    };
+};
+
+const findLiquiditySingle = async (userAddress: string) => {
+      const baseEthLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
+        },
+        body: JSON.stringify({
+            prompt: "Give me investment advice for wsteth on base with liquidity > 20 milions on aave",
+            address: userAddress,
+        })
+    }).then(res => res.json()) as TransactionResponse;
+
+    const baseCbBtcLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
+        },
+        body: JSON.stringify({
+            prompt: "Give me investment advice for cbbtc on base with liquidity > 20 milions on aave",
+            address: userAddress,
+        })
+    }).then(res => res.json()) as TransactionResponse;
+
+    return {
+        baseEth: {
+            description: baseEthLendingApy.result[0].data.description,
+            chainId: baseEthLendingApy.result[0].data.fromChainId
+        },
+        baseCbBtc: {
+            description: baseCbBtcLendingApy.result[0].data.description,
+            chainId: baseCbBtcLendingApy.result[0].data.fromChainId
+        }
+    };
+};
 
 export const getDepositStrategy = async ({
   userAddress,
   amount,
   strategy,
 }: DepositParams): Promise<StrategyResponse> => {
-  try {
-    const openai = new OpenAI({
-      apiKey: environment.OPENAI_API_KEY!,
-    });
-
-    switch (strategy) {
-      case 1:
-        //fetch usdc lending APY on Base and Polygon
-        const baseUsdcLendingApy = (await fetch(
-          "https://api.brian.app/v1/transact",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-            },
-            body: JSON.stringify({
-              prompt:
-                "Give me investment advice for USDC on Base with liquidity > 5 milions",
-              address: userAddress,
-            }),
-          }
-        ).then((res) => res.json())) as Promise<any>;
-        console.log(baseUsdcLendingApy, "baseUsdcLendingApy");
-        const baseUsdcLendingApyDescription = (await baseUsdcLendingApy)[0].data
-          .description;
-        console.log(
-          baseUsdcLendingApyDescription,
-          "baseUsdcLendingApyDescription"
-        );
-
-        //fetch usdc lending APY on Base and Polygon
-        const polygonUsdcLendingApy = (await fetch(
-          "https://api.brian.app/v1/transact",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-            },
-            body: JSON.stringify({
-              prompt:
-                "Give me investment advice for USDC on Polygon with liquidity > 5 milions",
-              address: userAddress,
-            }),
-          }
-        ).then((res) => res.json())) as Promise<any>;
-
-        const polygonUsdcLendingApyDescription = (
-          await polygonUsdcLendingApy
-        )[0].data.description;
-
-        const strategies =
-          baseUsdcLendingApyDescription + polygonUsdcLendingApyDescription;
-        console.log(strategies, "strategies");
-
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: populateSystemTemplate(
-                strategy.toString(),
-                amount,
-                strategies
-              ),
-            },
-          ],
-        });
-
-        const strategyDescription = JSON.parse(
-          response.choices[0].message.content!
-        ).strategies[0].description;
-        console.log(strategyDescription, "strategyDescription");
-
-        const strategyTx = (await fetch("https://api.brian.app/v1/transact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt: strategyDescription,
-            address: userAddress,
-          }),
-        }).then((res) => res.json())) as Promise<any>;
-
-        console.log(strategyTx, "strategyTx");
-
-        const strategyTxData = (await strategyTx)[0].data.steps?.[
-          (await strategyTx)[0].data.steps.length - 1
-        ].data;
-        const chainId = (await strategyTx)[0].data.fromChainId;
-
-        // Strategy 1: Direct USDC deposit to Aave
-        return {
-          success: true,
-          data: {
-            strategy: 1,
-            details: strategyDescription,
-            data: strategyTxData,
-            chainId: chainId!,
-          },
-        };
-
-      case 2: {
-        // Fetch APY data for both protocols
-        const aaveData = (await fetch("https://api.brian.app/v1/transact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt:
-              "Give me investment advice for USDC on Aave with liquidity > 5 millions",
-            address: userAddress,
-          }),
-        }).then((res) => res.json())) as Promise<any>;
-
-        const compoundData = (await fetch("https://api.brian.app/v1/transact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt:
-              "Give me investment advice for USDC on Compound with liquidity > 5 millions",
-            address: userAddress,
-          }),
-        }).then((res) => res.json())) as Promise<any>;
-
-        const strategies =
-          (await aaveData)[0].data.description +
-          (await compoundData)[0].data.description;
-
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: populateSystemTemplate(
-                strategy.toString(),
-                amount,
-                strategies
-              ),
-            },
-          ],
-        });
-
-        const strategyDescription = JSON.parse(
-          response.choices[0].message.content!
-        ).strategies[0].description;
-
-        const strategyTx = (await fetch("https://api.brian.app/v1/transact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt: strategyDescription,
-            address: userAddress,
-          }),
-        }).then((res) => res.json())) as Promise<any>;
-
-        const strategyTxData = (await strategyTx)[0].data.steps?.[
-          (await strategyTx)[0].data.steps.length - 1
-        ].data;
-        const chainId = (await strategyTx)[0].data.fromChainId;
-
-        return {
-          success: true,
-          data: {
-            strategy: 2,
-            details: strategyDescription,
-            data: strategyTxData,
-            chainId: chainId!,
-          },
-        };
-      }
-
-      case 3: {
-        // Fetch APY data across multiple protocols and chains
-        const [highYieldData, stableYieldData] = await Promise.all([
-          fetch("https://api.brian.app/v1/transact", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-            },
-            body: JSON.stringify({
-              prompt:
-                "Give me highest yield investment opportunities for USDC across all supported protocols",
-              address: userAddress,
-            }),
-          }).then((res) => res.json()) as Promise<any>,
-          fetch("https://api.brian.app/v1/transact", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-            },
-            body: JSON.stringify({
-              prompt:
-                "Give me stable yield farming strategies for USDC with minimum risk",
-              address: userAddress,
-            }),
-          }).then((res) => res.json()) as Promise<any>,
-        ]);
-
-        const strategies = `${highYieldData[0].data.description} ${stableYieldData[0].data.description}`;
-
+    try {
         const openai = new OpenAI({
-          apiKey: environment.OPENAI_API_KEY!,
+            apiKey: process.env.OPENAI_API_KEY!,
         });
 
-        //OpenAI call to get the strategy description
+        let strategies: string;
+
+        switch (strategy) {
+            case 1: {
+                // 100% stable cross-chain
+                const crossChainResults = await findStableLiquidityCross(userAddress);
+                strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId})`;
+                console.log(strategies, "strategies")
+                break;
+            }
+            case 2: {
+                // 50% stable cross-chain, 50% single
+                const crossChainResults = await findStableLiquidityCross(userAddress);
+                const singleResults = await findLiquiditySingle(userAddress);
+                strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
+                console.log(strategies, "strategies")
+                break;
+            }
+            case 3: {
+                // 20% stable cross-chain, 80% single
+                const crossChainResults = await findStableLiquidityCross(userAddress);
+                const singleResults = await findLiquiditySingle(userAddress);
+                strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
+                console.log(strategies, "strategies")
+                break;
+            }
+            default:
+                return {
+                    success: false,
+                    error: "Invalid strategy selected"
+                };
+        }
+
+        //
+
         const response = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: populateSystemTemplate(
-                strategy.toString(),
-                amount,
-                strategies
-              ),
-            },
-          ],
+            model: "gpt-4o-mini",
+            messages: [{ 
+                role: "system", 
+                content: populateSystemTemplate(
+                    strategy.toString(), 
+                    amount,
+                    strategies
+                ) 
+            }],
         });
 
-        const strategyDescription = JSON.parse(
-          response.choices[0].message.content!
-        );
-        console.log(strategyDescription, "strategyDescription");
-        console.log(
-          strategyDescription.strategies,
-          "strategyDescription.strategies"
-        );
-        console.log(
-          strategyDescription.strategies.length,
-          "strategyDescription.strategies.length"
-        );
+        // Clean and parse the response
+        const cleanContent = response.choices[0].message.content!
+            .replace(/```json\n?/, '')
+            .replace(/```/, '')
+            .trim();
 
-        const strategyTx = (await fetch("https://api.brian.app/v1/transact", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${environment.BRIAN_API_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt: strategyDescription,
-            address: userAddress,
-          }),
-        }).then((res) => res.json())) as Promise<any>;
+        try {
+            const parsedResponse = JSON.parse(cleanContent);
+            console.log(parsedResponse, "parsedResponse")
+            
+            // Join strategies with "and then"
+            const strategyDescriptions = parsedResponse.strategies
+                .map((s: { description: string }) => s.description)
+                .join(' and then ');
+            console.log(strategyDescriptions, "strategyDescriptions")
+            const strategyTx = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
+                },
+                body: JSON.stringify({
+                    prompt: strategyDescriptions,
+                    address: userAddress,
+                })
+            }).then(res => res.json()) as TransactionResponse;
+            console.log(strategyTx, "strategyTx")
 
-        const strategyTxData = (await strategyTx)[0].data.steps?.[
-          (await strategyTx)[0].data.steps.length - 1
-        ].data;
-        const chainId = (await strategyTx)[0].data.fromChainId;
+            // Map each result to the desired format
+            const transactions = strategyTx.result.map(item => ({
+                strategy,
+                details: item.data.description,
+                data: item.data.steps?.[item.data.steps.length - 1].data,
+                chainId: item.data.fromChainId || 0
+            }));
+            console.log(transactions, "transactions")
+            console.log(transactions.length, "transactions.length")
 
+
+
+            return {
+                success: true,
+                data: {
+                    transactions,
+                    totalTransactions: transactions.length
+                }
+            };
+
+        } catch (parseError) {
+            console.error("JSON parsing error:", parseError, "Raw content:", cleanContent);
+            throw new Error("Failed to parse strategy response");
+        }
+
+    } catch (error) {
+        console.error("Strategy execution error:", error);
         return {
-          success: true,
-          data: {
-            strategy: 3,
-            details: strategyDescription,
-            data: strategyTxData,
-            chainId: chainId!,
-          },
-        };
-      }
-
-      default:
-        return {
-          success: false,
-          error: "Invalid strategy selected",
+            success: false,
+            error: "Failed to execute deposit strategy"
         };
     }
-  } catch (error) {
-    console.error("Strategy execution error:", error);
-    return {
-      success: false,
-      error: "Failed to execute deposit strategy",
-    };
-  }
 };
 
-//system template for the strategy description
 export const systemTemplate = `
+You are an AI agent helping users invest their USDC according to their risk tolerance and goals.
+The user has selected strategy {risk_level} and has {amount} USDC to invest.
 
-    you are a AI agent that is helping users to invest their USDC according to their risk tolerance and goals.
-    We provide 3 risk levels: low, medium, high. The user risk level is {risk_level}. The user has {amount} USDC to invest.
-    These are the available strategies on Base and Polygon:
-    {strategies}
-    Choose the best or multiple optimal strategies for the user and return the strategy description like this:
-    "deposit {amount} USDC to strategyProtocol on {chain} " or "deposit {amount} USDC to strategyProtocol on {chain} and deposit {amount} USDC to strategyProtocol on {chain}". An example of a strategy description is: 
-    "deposit 1000 USDC to aave on Polygon" or "deposit 1000 USDC to aave on Polygon and deposit 1000 USDC to compound on Base".
-    Your response should be in JSON format like this (if there is only one strategy, the array will have only one element):
-    { 
-      "strategies": [
-        {
-          "description": "deposit 1000 USDC to aave on Polygon"
-        },
-        {
-          "description": "deposit 1000 USDC to aave on Polygon and deposit 1000 USDC to compound on Base"
-        }
-      ]
-   }
+Available strategies:
+{strategies}
+
+Strategy rules:
+- Strategy 1: Distribute 100% of funds across stable pools (can use one or multiple pools)
+- Strategy 2: Distribute exactly 50% to stable pools and 50% across ETH and/or cbBTC pools
+- Strategy 3: Distribute exactly 20% to stable pools and 80% across ETH and/or cbBTC pools
+
+For stable pools, prefer to not split the amount between pools if the APY is little higher and the liquidity is similar.
+For ETH/cbBTC pools the action is a swap from usdc to the output protocol token, don't consider the protocol name in the response.
+
+Respond with a raw JSON object in this exact format (no markdown, no code blocks):
+{
+  "strategies": [
+    {
+      "description": "deposit X usdc to protocolName on chainName"
+    }
+  ]
+}
+or in case of ETH/cbBTC pools:
+{
+  "strategies": [
+    {
+      "description": "swap X usdc to protocolToken on chainName"
+    }
+  ]
+}
+
+Each strategy must be a single deposit or swap action (if not stable pools). The sum of all deposits must equal {amount}.
 `;
 
 //function to populate the system template with the actual values
