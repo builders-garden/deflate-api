@@ -64,8 +64,8 @@ export const createBankAccount = async (req: Request, res: Response) => {
         postalCode: user.customMetadata?.postalCode,
       },
       accountOwnerName: {
-        firstName: user.customMetadata?.firstName,
-        lastName: user.customMetadata?.lastName,
+        firstName: user.customMetadata?.fullName?.split(" ")[0],
+        lastName: user.customMetadata?.fullName?.split(" ").slice(1).join(" "),
       },
       accountType:
         user.customMetadata?.country === "USA"
