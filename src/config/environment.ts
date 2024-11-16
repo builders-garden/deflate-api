@@ -17,4 +17,6 @@ export const environment = {
   ONE_INCH_API_KEY: process.env.ONE_INCH_API_KEY as string,
   REDIS_URL: process.env.REDIS_URL as string,
   REDIS_TOKEN: process.env.REDIS_TOKEN as string,
+  BICONOMY_BASE_BUNDLER_URL: process.env.BICONOMY_BASE_BUNDLER_URL as string,
+  BICONOMY_BASE_PAYMASTER_URL: process.env.BICONOMY_BASE_PAYMASTER_URL as string,
 };

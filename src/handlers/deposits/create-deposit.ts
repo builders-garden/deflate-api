@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
-import { createPublicClient, createWalletClient, erc20Abi, http } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  encodeFunctionData,
+  erc20Abi,
+  http,
+} from "viem";
 import { base, polygon } from "viem/chains";
 import { getDepositStrategy } from "../../services/deflate-agent/strategy-handler";
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
@@ -12,6 +18,8 @@ import {
   POLYGON_DEFLATE_PORTAL_ADDRESS,
 } from "../../utils/constants";
 import { redis } from "../../services/redis";
+import { sendTransactionWithSession } from "../../services/biconomy";
+import { SessionData } from "@biconomy/sdk";
 // Define the input validation schema
 const depositSchema = z.object({
   userRiskProfile: z.string().array(),
@@ -34,7 +42,7 @@ export const createDeposit = async (req: Request, res: Response) => {
     );
 
     //load Account from Agent Private Key
-    const account = privateKeyToAccount(
+    const agentAccount = privateKeyToAccount(
       environment.AGENT_PRIVATE_KEY! as `0x${string}`
     );
 
@@ -51,17 +59,17 @@ export const createDeposit = async (req: Request, res: Response) => {
     const totalTransactions = data?.totalTransactions;
     const transactions = data?.transactions;
 
+    const basePublicClient = createPublicClient({
+      chain: base,
+      transport: http(),
+    });
+    const baseWalletClient = createWalletClient({
+      account: agentAccount,
+      chain: base,
+      transport: http(),
+    });
     if (fake) {
       console.log("fake onramping user");
-      const baseWalletClient = createWalletClient({
-        account,
-        chain: base,
-        transport: http(),
-      });
-      const basePublicClient = createPublicClient({
-        chain: base,
-        transport: http(),
-      });
 
       // send 5 USDC to the smart wallet
       const fundTx = await baseWalletClient.writeContract({
@@ -78,6 +86,24 @@ export const createDeposit = async (req: Request, res: Response) => {
 
     console.log(transactions, "transactions------");
 
+    const compressedSessionData = await redis.get(
+      user?.customMetadata.smartAccountAddress
+    );
+    await sendTransactionWithSession(
+      JSON.parse(compressedSessionData as string) as SessionData,
+      [
+        {
+          to: BASE_USDC_ADDRESS,
+          data: encodeFunctionData({
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [BASE_DEFLATE_PORTAL_ADDRESS as `0x${string}`, BigInt(2 ** 256 - 1)],
+          }),
+          value: 0n,
+        },
+      ]
+    );
+
     // Execute each transaction sequentially
     const txResults = [];
     const successfulTxs = [];
@@ -91,7 +117,7 @@ export const createDeposit = async (req: Request, res: Response) => {
             : POLYGON_DEFLATE_PORTAL_ADDRESS;
 
         const client = createWalletClient({
-          account,
+          account: agentAccount,
           chain: chain,
           transport: http(),
         });
@@ -101,7 +127,7 @@ export const createDeposit = async (req: Request, res: Response) => {
         });
 
         const { request } = await publicClient.simulateContract({
-          account,
+          account: agentAccount,
           address: deflatePortalAddress as `0x${string}`,
           abi: DEFLATE_PORTAL_ABI,
           functionName: "executeStrategy",
