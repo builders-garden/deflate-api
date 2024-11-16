@@ -1,15 +1,24 @@
-import { SignProtocolClient, SpMode, EvmChains } from "@ethsign/sp-sdk";
+import {
+  SignProtocolClient,
+  SpMode,
+  EvmChains,
+  IndexService,
+} from "@ethsign/sp-sdk";
 import { getEnsAddress } from "./ens";
 import { privateKeyToAccount } from "viem/accounts";
 import { environment } from "../config/environment";
+import { createWalletClient, erc20Abi, http } from "viem";
+import { base } from "viem/chains";
+import { sendUsdc } from "./viem";
+
+const agentAccount = privateKeyToAccount(
+  environment.AGENT_PRIVATE_KEY as `0x${string}`
+);
 
 export const createAttestation = async (data: {
   referredENS: string;
   referrerENS: string;
 }) => {
-  const agentAccount = privateKeyToAccount(
-    environment.AGENT_PRIVATE_KEY as `0x${string}`
-  );
   const client = new SignProtocolClient(SpMode.OnChain, {
     chain: EvmChains.base,
     account: agentAccount,
@@ -25,8 +34,21 @@ export const createAttestation = async (data: {
       referredENS: data.referredENS,
       createdAt: Date.now(),
     },
-    indexingValue: "xxx",
+    indexingValue: `deflate-${referredAddress}`,
     attester: agentAccount.address,
     recipients: [referredAddress!],
+  });
+  await sendUsdc(referredAddress!, 1);
+};
+
+export const getAttestations = async (data: { referredENS: string }) => {
+  const indexService = new IndexService("mainnet");
+  const referredAddress = await getEnsAddress(data.referredENS);
+  return await indexService.queryAttestationList({
+    schemaId: "onchain_evm_8453_0x77",
+    attester: agentAccount.address,
+    page: 1,
+    mode: "onchain", // Data storage location
+    indexingValue: `deflate-${referredAddress}`,
   });
 };

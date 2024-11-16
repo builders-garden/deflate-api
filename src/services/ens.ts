@@ -1,8 +1,16 @@
-import { createPublicClient, createWalletClient, http } from "viem";
-import { normalize } from "viem/ens";
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  labelhash,
+  toHex,
+} from "viem";
+import { normalize, packetToBytes } from "viem/ens";
 import { base, mainnet } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { environment } from "../config/environment";
+import { DEFLATE_SUBDOMAIN_REGISTRAR_ABI } from "../utils/abis";
+import { BASE_L2_REGISTRAR_ADDRESS } from "../utils/constants";
 
 export const publicClient = createPublicClient({
   chain: mainnet,
@@ -16,7 +24,10 @@ export const getEnsAddress = async (ensName: string) => {
   return ensAddress;
 };
 
-export const registerEnsSubdomain = async (ensName: string) => {
+export const registerEnsSubdomain = async (
+  username: string,
+  owner: `0x${string}`
+) => {
   const account = privateKeyToAccount(
     environment.AGENT_PRIVATE_KEY! as `0x${string}`
   );
@@ -24,5 +35,11 @@ export const registerEnsSubdomain = async (ensName: string) => {
     account,
     chain: base,
     transport: http(),
+  });
+  await walletClient.writeContract({
+    address: BASE_L2_REGISTRAR_ADDRESS,
+    abi: DEFLATE_SUBDOMAIN_REGISTRAR_ABI,
+    functionName: "register",
+    args: [normalize(username), owner],
   });
 };
