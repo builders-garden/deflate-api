@@ -18,14 +18,14 @@ export const createBankAccount = async (req: Request, res: Response) => {
     return;
   }
 
-  if (!user.customMetadata.bridgeCustomerId) {
+  if (!user.customMetadata?.bridgeCustomerId) {
     res.json({
       message: "Start KYC first.",
     });
     return;
   }
 
-  if (user.customMetadata.accountNumber) {
+  if (user.customMetadata?.accountNumber) {
     res.json({
       message: "Already connected a bank account. Delete it first.",
     });
@@ -33,26 +33,26 @@ export const createBankAccount = async (req: Request, res: Response) => {
   }
 
   const externalAccount = await createExternalAccount(
-    user.customMetadata.bridgeCustomerId,
+    user.customMetadata?.bridgeCustomerId,
     {
       accountNumber: body.accountNumber,
-      ...(user.customMetadata.country === "USA"
+      ...(user.customMetadata?.country === "USA"
         ? { routingNumber: body.routingNumber }
         : { bic: body.routingNumber }),
-      country: user.customMetadata.country,
+      country: user.customMetadata?.country,
       address: {
-        street: user.customMetadata.address,
-        city: user.customMetadata.city,
-        country: user.customMetadata.country,
-        state: user.customMetadata.state,
-        postalCode: user.customMetadata.postalCode,
+        street: user.customMetadata?.address,
+        city: user.customMetadata?.city,
+        country: user.customMetadata?.country,
+        state: user.customMetadata?.state,
+        postalCode: user.customMetadata?.postalCode,
       },
       accountOwnerName: {
-        firstName: user.customMetadata.firstName,
-        lastName: user.customMetadata.lastName,
+        firstName: user.customMetadata?.firstName,
+        lastName: user.customMetadata?.lastName,
       },
       accountType:
-        user.customMetadata.country === "USA"
+        user.customMetadata?.country === "USA"
           ? BridgeAccountType.US
           : BridgeAccountType.IBAN,
       accountOwnerType: BridgeAccountOwnerType.INDIVIDUAL,

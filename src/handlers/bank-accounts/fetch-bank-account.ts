@@ -4,15 +4,15 @@ import { snakeToCamelCase } from "../../utils";
 
 export const fetchBankAccount = async (req: Request, res: Response) => {
   const user = req.user;
-  const externalAccountId = user?.customMetadata.bridgeExternalAccountId;
+  const externalAccountId = user?.customMetadata?.bridgeExternalAccountId;
 
   if (!externalAccountId) {
     return res.status(404).json({ error: "External account ID not found" });
   }
 
   const externalAccount = await getExternalAccount(
-    user?.customMetadata.bridgeCustomerId,
-    user?.customMetadata.bridgeExternalAccountId
+    user?.customMetadata?.bridgeCustomerId,
+    user?.customMetadata?.bridgeExternalAccountId
   );
 
   if (!externalAccount) {

@@ -1,16 +1,13 @@
 import { Request, Response } from "express";
-import {
-  createKYCLink,
-  fetchKYCLinkById,
-} from "../../services/peanut";
+import { createKYCLink, fetchKYCLinkById } from "../../services/peanut";
 import { setCustomMetadata } from "../../services/privy";
 import { snakeToCamelCase } from "../../utils";
 
 export const createKYC = async (req: Request, res: Response) => {
   const { fullName, address, city, postalCode, country } = req.body;
   const user = req.user!;
-  if (user?.customMetadata.bridgeKycLinkId) {
-    const kyc = await fetchKYCLinkById(user.customMetadata.bridgeKycLinkId);
+  if (user?.customMetadata?.bridgeKycLinkId) {
+    const kyc = await fetchKYCLinkById(user.customMetadata?.bridgeKycLinkId);
     return res.json(kyc);
   }
 
