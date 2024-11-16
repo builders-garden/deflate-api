@@ -26,7 +26,7 @@ export const createAttestation = async (data: {
   const referrerAddress = await getEnsAddress(data.referrerENS);
   const referredAddress = await getEnsAddress(data.referredENS);
   const createAttestationRes = await client.createAttestation({
-    schemaId: "0x77",
+    schemaId: "onchain_evm_8453_0x77",
     data: {
       referrer: referrerAddress,
       referred: referredAddress,
@@ -47,7 +47,7 @@ export const getAttestations = async (username: string) => {
   return await indexService.queryAttestationList({
     schemaId: "onchain_evm_8453_0x77",
     attester: agentAccount.address,
-    page: 1,
+    page: 0,
     mode: "onchain", // Data storage location
     indexingValue: `deflate-${referredAddress}`,
   });
