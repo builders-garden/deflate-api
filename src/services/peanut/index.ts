@@ -13,6 +13,7 @@ import {
   CreateLiquidationAddress,
 } from "./types";
 import { environment } from "../../config/environment";
+import { snakeToCamelCase } from "../../utils";
 
 if (!environment.PEANUT_API_KEY) {
   throw new Error("PEANUT_API_KEY is not set");
@@ -209,13 +210,13 @@ export const getCustomerDrains = async (
   );
   return {
     data: drains
-      .flatMap((d: { data: any }) => d.data)
+      .flatMap((d: { data: any }) => snakeToCamelCase(d.data))
       .sort(
         (
-          a: { created_at: string | number | Date },
-          b: { created_at: string | number | Date }
-        ) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ),
+          a: { createdAt: string | number | Date },
+        b: { createdAt: string | number | Date }
+      ) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ),
     count: drains.reduce((acc: any, d: { count: any }) => acc + d.count, 0),
   };
 };
