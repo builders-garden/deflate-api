@@ -16,6 +16,7 @@ import { fetchValueChart } from "../../../handlers/portfolio/fetch-value-chart";
 import { fetchProfitAndLoss } from "../../../handlers/portfolio/fetch-profit-and-loss";
 import { fetchCurrentValue } from "../../../handlers/portfolio/fetch-current-value";
 import { createWithdraw } from "../../../handlers/withdraws/create-withdraw";
+import { fetchPortfolio } from "../../../handlers/portfolio/fetch-portfolio";
 
 const router = Router();
 
@@ -88,21 +89,9 @@ const routes = [
     middleware: [authMiddleware],
   },
   {
-    path: "/portfolio/value-chart",
+    path: "/portfolio",
     method: "get",
-    handler: fetchValueChart,
-    middleware: [authMiddleware],
-  },
-  {
-    path: "/portfolio/profit-and-loss",
-    method: "get",
-    handler: fetchProfitAndLoss,
-    middleware: [authMiddleware],
-  },
-  {
-    path: "/portfolio/current-value",
-    method: "get",
-    handler: fetchCurrentValue,
+    handler: fetchPortfolio,
     middleware: [authMiddleware],
   },
   {
@@ -111,7 +100,6 @@ const routes = [
     handler: createWithdraw,
     middleware: [authMiddleware],
   },
-  
 ];
 
 // Register routes
