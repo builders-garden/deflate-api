@@ -1,11 +1,11 @@
 import { PrivyClient, User } from "@privy-io/server-auth";
 import { environment } from "../config/environment";
 
-if (!process.env.PRIVY_APP_ID) {
+if (!environment.PRIVY_APP_ID) {
   throw new Error("Please provide your Privy App ID");
 }
 
-if (!process.env.PRIVY_APP_SECRET) {
+if (!environment.PRIVY_APP_SECRET) {
   throw new Error("Please provide your Privy App Secret");
 }
 

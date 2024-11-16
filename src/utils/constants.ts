@@ -1,0 +1,2 @@
+export const BASE_DEFLATE_PORTAL_ADDRESS = "";
+export const POLYGON_DEFLATE_PORTAL_ADDRESS = "";

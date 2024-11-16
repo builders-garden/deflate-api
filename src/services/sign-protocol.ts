@@ -7,7 +7,7 @@ export const createAttestation = async (data: {
   referrerENS: string;
 }) => {
   const agentAccount = privateKeyToAccount(
-    process.env.AGENT_PRIVATE_KEY as `0x${string}`
+    environment.AGENT_PRIVATE_KEY as `0x${string}`
   );
   const client = new SignProtocolClient(SpMode.OnChain, {
     chain: EvmChains.base,
