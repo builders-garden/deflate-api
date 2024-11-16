@@ -52,7 +52,7 @@ export const createKYCLink = async (
       "api-key": apiKey,
     },
     body: JSON.stringify({
-      type: BridgeAccountType.IBAN,
+      type: BridgeAccountOwnerType.INDIVIDUAL,
       fullName,
       email,
       redirectUri,
@@ -214,9 +214,9 @@ export const getCustomerDrains = async (
       .sort(
         (
           a: { createdAt: string | number | Date },
-        b: { createdAt: string | number | Date }
-      ) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ),
+          b: { createdAt: string | number | Date }
+        ) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
     count: drains.reduce((acc: any, d: { count: any }) => acc + d.count, 0),
   };
 };
