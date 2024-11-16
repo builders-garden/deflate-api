@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createExternalAccount } from "../../services/peanut";
+import { createExternalAccount, fetchKYCLinkById } from "../../services/peanut";
 import {
   BridgeAccountOwnerType,
   BridgeAccountType,
@@ -19,10 +19,25 @@ export const createBankAccount = async (req: Request, res: Response) => {
   }
 
   if (!user.customMetadata?.bridgeCustomerId) {
-    res.json({
-      message: "Start KYC first.",
+    if (!user.customMetadata?.bridgeKycLinkId) {
+      res.json({
+        message: "Start KYC first.",
+      });
+      return;
+    }
+    const kycLink = await fetchKYCLinkById(
+      user.customMetadata?.bridgeKycLinkId
+    );
+    if (!kycLink) {
+      res.json({
+        message: "Start KYC first.",
+      });
+      return;
+    }
+    await setCustomMetadata(user.id, {
+      ...(user.customMetadata ?? {}),
+      bridgeCustomerId: kycLink.customer_id,
     });
-    return;
   }
 
   if (user.customMetadata?.accountNumber) {

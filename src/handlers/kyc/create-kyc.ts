@@ -20,6 +20,7 @@ export const createKYC = async (req: Request, res: Response) => {
   await setCustomMetadata(user.id, {
     ...(user.customMetadata ?? {}),
     bridgeKycLinkId: kycLink.id,
+    bridgeCustomerId: kycLink.customer_id,
     country,
     city,
     postalCode,
