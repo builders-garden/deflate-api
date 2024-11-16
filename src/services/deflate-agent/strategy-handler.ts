@@ -256,9 +256,9 @@ Available strategies:
 {strategies}
 
 Strategy rules:
-- Strategy 1: Distribute 100% of funds across stable pools (can use one or multiple pools)
-- Strategy 2: Distribute exactly 50% to stable pools and 50% across ETH and/or cbBTC pools
-- Strategy 3: Distribute exactly 20% to stable pools and 80% across ETH and/or cbBTC pools
+- Strategy 1: Distribute 100% of funds across stable pools (can use one or multiple pools). Only use pools on Base.
+- Strategy 2: Distribute exactly 50% to stable pools and 50% across ETH and/or cbBTC pools. Only use pools on Base.
+- Strategy 3: Distribute exactly 20% to stable pools and 80% across ETH and/or cbBTC pools. Only use pools on Base.
 
 For stable pools, prefer to not split the amount between pools if the APY is little higher and the liquidity is similar.
 For ETH/cbBTC pools the action is a swap from usdc to the output protocol token, don't consider the protocol name in the response.
