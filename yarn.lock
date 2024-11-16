@@ -101,6 +101,14 @@
     ts-case-convert "^2.0.2"
     type-fest "^3.6.1"
 
+"@rhinestone/module-sdk@^0.1.28":
+  version "0.1.28"
+  resolved "https://registry.yarnpkg.com/@rhinestone/module-sdk/-/module-sdk-0.1.28.tgz#454e3fbe48cac8e90a77f2f7e2788dc8ea899f11"
+  integrity sha512-Ob9qMs/scBrk6/X0dvb02kWqiCdP3Vau6PRNr3PP7PGxIIBFunJoVHuLWg4Tb/DHS3dCUXhuTk+XhObH1HjH+w==
+  dependencies:
+    solady "^0.0.235"
+    tslib "^2.7.0"
+
 "@scure/base@~1.1.7", "@scure/base@~1.1.8":
   version "1.1.9"
   resolved "https://registry.npmjs.org/@scure/base/-/base-1.1.9.tgz"
@@ -1386,6 +1394,11 @@ side-channel@^1.0.6:
     get-intrinsic "^1.2.4"
     object-inspect "^1.13.1"
 
+solady@^0.0.235:
+  version "0.0.235"
+  resolved "https://registry.yarnpkg.com/solady/-/solady-0.0.235.tgz#50ab6e403ed6935012df2c16803fcd58045f9a0e"
+  integrity sha512-JUEXLDG7ag3HmqUnrDG7ilhafH6R9bFPpwV63O2kH4UbnS2+gRGEOqqy4k01O7tHjo3MWkDD0cpG+UY9pjy/fQ==
+
 source-map-support@^0.5.12:
   version "0.5.21"
   resolved "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.21.tgz"
@@ -1535,7 +1548,7 @@ tslib@2.7.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.7.0.tgz"
   integrity sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==
 
-tslib@^2.6.2, tslib@^2.8.0:
+tslib@^2.6.2, tslib@^2.7.0, tslib@^2.8.0:
   version "2.8.1"
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
