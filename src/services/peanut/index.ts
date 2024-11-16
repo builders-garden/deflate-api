@@ -198,6 +198,7 @@ export const getCustomerDrains = async (
     receipt: {
       outgoing_amount: string;
     };
+    state: string;
   }[];
   count: number;
 }> => {
