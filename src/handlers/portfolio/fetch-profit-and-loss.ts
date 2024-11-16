@@ -3,6 +3,7 @@ import {
   fetchProfitAndLossData,
   ONE_INCH_TIMERANGE,
 } from "../../services/1inch";
+import { PLACEHOLDER_ADDRESS } from "../../utils/constants";
 
 export const fetchProfitAndLoss = async (req: Request, res: Response) => {
   const user = req.user!;
@@ -11,7 +12,7 @@ export const fetchProfitAndLoss = async (req: Request, res: Response) => {
     (account) => account.type === "wallet"
   )?.address;
   const profitAndLossData = await fetchProfitAndLossData(
-    walletAddress!,
+    PLACEHOLDER_ADDRESS,
     timerange
   );
   res.json({

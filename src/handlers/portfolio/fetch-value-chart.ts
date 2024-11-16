@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { fetchValueChartData, ONE_INCH_TIMERANGE } from "../../services/1inch";
+import { PLACEHOLDER_ADDRESS } from "../../utils/constants";
 
 export const fetchValueChart = async (req: Request, res: Response) => {
   const user = req.user!;
@@ -7,8 +8,8 @@ export const fetchValueChart = async (req: Request, res: Response) => {
   const walletAddress = user.linkedAccounts.find(
     (account) => account.type === "wallet"
   )?.address;
-  const valueChart = await fetchValueChartData(walletAddress!, timerange);
+  const valueChart = await fetchValueChartData(PLACEHOLDER_ADDRESS, timerange);
   res.json({
-    data: valueChart.result
+    data: valueChart.result,
   });
 };

@@ -7,3 +7,5 @@ export const BASE_L2_REGISTRAR_ADDRESS =
 
 export const ONE_INCH_API_BASE_URL =
   "https://api.1inch.dev/portfolio/portfolio/v4/general";
+
+export const PLACEHOLDER_ADDRESS = "0x1358155a15930f89eBc787a34Eb4ccfd9720bC62";
