@@ -1,6 +1,7 @@
 import { SignProtocolClient, SpMode, EvmChains } from "@ethsign/sp-sdk";
 import { getEnsAddress } from "./ens";
 import { privateKeyToAccount } from "viem/accounts";
+import { environment } from "../config/environment";
 
 export const createAttestation = async (data: {
   referredENS: string;
