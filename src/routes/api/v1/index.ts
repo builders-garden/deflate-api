@@ -17,6 +17,7 @@ import { fetchProfitAndLoss } from "../../../handlers/portfolio/fetch-profit-and
 import { fetchCurrentValue } from "../../../handlers/portfolio/fetch-current-value";
 import { createWithdraw } from "../../../handlers/withdraws/create-withdraw";
 import { fetchPortfolio } from "../../../handlers/portfolio/fetch-portfolio";
+import { sessionsRoute } from "../../../handlers/sessions/route";
 
 const router = Router();
 
@@ -98,6 +99,12 @@ const routes = [
     path: "/withdraws",
     method: "post",
     handler: createWithdraw,
+    middleware: [authMiddleware],
+  },
+  {
+    path: "/sessions",
+    method: "post",
+    handler: sessionsRoute,
     middleware: [authMiddleware],
   },
 ];

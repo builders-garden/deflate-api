@@ -5,10 +5,12 @@ import { createPublicClient, createWalletClient, http } from "viem";
 import { base, polygon } from "viem/chains";
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
-import { Redis } from '@upstash/redis'
 import { TransactionResponse } from "../../services/deflate-agent/Brian-api-interface";
-import { BASE_DEFLATE_PORTAL_ADDRESS, POLYGON_DEFLATE_PORTAL_ADDRESS } from "../../utils/constants";
-
+import {
+  BASE_DEFLATE_PORTAL_ADDRESS,
+  POLYGON_DEFLATE_PORTAL_ADDRESS,
+} from "../../utils/constants";
+import { redis } from "../../services/redis";
 
 // Define the input validation schema
 const withdrawSchema = z.object({
@@ -17,11 +19,6 @@ const withdrawSchema = z.object({
 
 // Type for the request body
 type WithdrawRequest = z.infer<typeof withdrawSchema>;
-
-const redis = new Redis({
-    url: process.env.REDIS_URL as string,
-    token: process.env.REDIS_TOKEN as string,
-  })
 
 interface Position {
   timestamp: string;
@@ -35,8 +32,8 @@ interface Position {
 
 export const createWithdraw = async (req: Request, res: Response) => {
   try {
-    // Validate the request body
-    const { userAddress } = withdrawSchema.parse(req.body);
+    const user = req.user!;
+    const userAddress = user.customMetadata.smartAccountAddress;
 
     // Get positions from Redis
     const positionsStr = await redis.get(userAddress);
@@ -61,9 +58,10 @@ export const createWithdraw = async (req: Request, res: Response) => {
     // Prepare transactions for each chain
     const transactions = [];
     for (const [chainId, chainPositions] of Object.entries(positionsByChain)) {
-      const deflatePortalAddress = Number(chainId) === 8453 
-        ? BASE_DEFLATE_PORTAL_ADDRESS 
-        : POLYGON_DEFLATE_PORTAL_ADDRESS;
+      const deflatePortalAddress =
+        Number(chainId) === 8453
+          ? BASE_DEFLATE_PORTAL_ADDRESS
+          : POLYGON_DEFLATE_PORTAL_ADDRESS;
 
       // Prepare withdrawal data for each position
       for (const position of chainPositions) {
@@ -92,30 +90,33 @@ export const createWithdraw = async (req: Request, res: Response) => {
     for (const tx of transactions) {
       try {
         const chain = tx.chainId === 8453 ? base : polygon;
-        
+
         const client = createWalletClient({
           account,
           chain: chain,
           transport: http(),
         });
-        
+
         const publicClient = createPublicClient({
           chain: chain,
           transport: http(),
         });
 
         // Get swap transaction data from Brian API
-        const transactionData = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
-          },
-          body: JSON.stringify({
+        const transactionData = (await fetch(
+          "https://staging-api.brianknows.org/api/v0/agent/transaction",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+            },
+            body: JSON.stringify({
               prompt: `Swap ${tx.data.amount} ${tx.data.tokenAddress} to USDC on ${chain.name}`,
               address: userAddress,
-          })
-        }).then(res => res.json()) as TransactionResponse;
+            }),
+          }
+        ).then((res) => res.json())) as TransactionResponse;
 
         const swapData = transactionData.result[0].data.steps?.[0].data;
 
@@ -123,7 +124,7 @@ export const createWithdraw = async (req: Request, res: Response) => {
           account,
           address: tx.deflatePortalAddress as `0x${string}`,
           abi: DEFLATE_PORTAL_ABI,
-          functionName: 'executeStrategy',
+          functionName: "executeStrategy",
           args: [swapData],
         });
 
@@ -152,22 +153,22 @@ export const createWithdraw = async (req: Request, res: Response) => {
     // Filter out positions that were successfully withdrawn
     const successfulPositionHashes = new Set(
       txResults
-        .filter(tx => tx.success)
-        .map(tx => tx.position.transactionHash)
+        .filter((tx) => tx.success)
+        .map((tx) => tx.position.transactionHash)
     );
 
     // Update Redis with remaining positions
     if (successfulPositionHashes.size > 0) {
       const remainingPositions = positions.filter(
-        position => !successfulPositionHashes.has(position.transactionHash)
+        (position) => !successfulPositionHashes.has(position.transactionHash)
       );
-      
+
       if (remainingPositions.length > 0) {
         await redis.set(userAddress, JSON.stringify(remainingPositions));
       } else {
         await redis.del(userAddress);
       }
-    };
+    }
 
     res.json({
       success: true,

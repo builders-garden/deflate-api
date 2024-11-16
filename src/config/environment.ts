@@ -15,5 +15,6 @@ export const environment = {
   BRIAN_API_KEY: process.env.BRIAN_API_KEY as string,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY as string,
   ONE_INCH_API_KEY: process.env.ONE_INCH_API_KEY as string,
-  REDIS_URL: process.env.REDIS_URL as string
+  REDIS_URL: process.env.REDIS_URL as string,
+  REDIS_TOKEN: process.env.REDIS_TOKEN as string,
 };

@@ -6,8 +6,12 @@ import { base, polygon } from "viem/chains";
 import { getDepositStrategy } from "../../services/deflate-agent/strategy-handler";
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
-import { BASE_DEFLATE_PORTAL_ADDRESS, BASE_USDC_ADDRESS, POLYGON_DEFLATE_PORTAL_ADDRESS } from "../../utils/constants";
-import { Redis } from "@upstash/redis";
+import {
+  BASE_DEFLATE_PORTAL_ADDRESS,
+  BASE_USDC_ADDRESS,
+  POLYGON_DEFLATE_PORTAL_ADDRESS,
+} from "../../utils/constants";
+import { redis } from "../../services/redis";
 // Define the input validation schema
 const depositSchema = z.object({
   userRiskProfile: z.string().array(),
@@ -20,15 +24,14 @@ const depositSchema = z.object({
 // Type for the request body
 type DepositRequest = z.infer<typeof depositSchema>;
 
-const redis = new Redis({
-  url: process.env.REDIS_URL as string,
-  token: process.env.REDIS_TOKEN as string,
-});
 export const createDeposit = async (req: Request, res: Response) => {
   try {
+    const user = req.user!;
+    const userAddress = user.customMetadata.smartAccountAddress;
     // Validate the request body
-    const { userAddress, amount, strategy, userRiskProfile, fake } =
-      depositSchema.parse(req.body);
+    const { amount, strategy, userRiskProfile, fake } = depositSchema.parse(
+      req.body
+    );
 
     //load Account from Agent Private Key
     const account = privateKeyToAccount(
