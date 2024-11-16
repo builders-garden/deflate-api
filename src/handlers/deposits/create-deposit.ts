@@ -6,7 +6,7 @@ import { base, polygon } from "viem/chains";
 import { getDepositStrategy } from "../../services/deflate-agent/strategy-handler";
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
-import { BASE_USDC_ADDRESS } from "../../utils/constants";
+import { BASE_DEFLATE_PORTAL_ADDRESS, BASE_USDC_ADDRESS, POLYGON_DEFLATE_PORTAL_ADDRESS } from "../../utils/constants";
 import { Redis } from "@upstash/redis";
 // Define the input validation schema
 const depositSchema = z.object({
@@ -84,8 +84,8 @@ export const createDeposit = async (req: Request, res: Response) => {
         const chain = tx.chainId === 8453 ? base : polygon;
         const deflatePortalAddress =
           tx.chainId === 8453
-            ? process.env.BASE_DEFLATE_PORTAL_ADDRESS
-            : process.env.POLYGON_DEFLATE_PORTAL_ADDRESS;
+            ? BASE_DEFLATE_PORTAL_ADDRESS
+            : POLYGON_DEFLATE_PORTAL_ADDRESS;
 
         const client = createWalletClient({
           account,

@@ -7,6 +7,7 @@ import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
 import { Redis } from '@upstash/redis'
 import { TransactionResponse } from "../../services/deflate-agent/Brian-api-interface";
+import { BASE_DEFLATE_PORTAL_ADDRESS, POLYGON_DEFLATE_PORTAL_ADDRESS } from "../../utils/constants";
 
 
 // Define the input validation schema
@@ -61,8 +62,8 @@ export const createWithdraw = async (req: Request, res: Response) => {
     const transactions = [];
     for (const [chainId, chainPositions] of Object.entries(positionsByChain)) {
       const deflatePortalAddress = Number(chainId) === 8453 
-        ? process.env.BASE_DEFLATE_PORTAL_ADDRESS 
-        : process.env.POLYGON_DEFLATE_PORTAL_ADDRESS;
+        ? BASE_DEFLATE_PORTAL_ADDRESS 
+        : POLYGON_DEFLATE_PORTAL_ADDRESS;
 
       // Prepare withdrawal data for each position
       for (const position of chainPositions) {
