@@ -6,11 +6,12 @@ import { base, polygon } from "viem/chains";
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
 import { Redis } from '@upstash/redis'
+import { TransactionResponse } from "../../services/deflate-agent/Brian-api-interface";
 
 
 // Define the input validation schema
 const withdrawSchema = z.object({
-  userAddress: z.string().startsWith("0x"),
+  userAddress: z.string().startsWith("0x"), //smart account address
 });
 
 // Type for the request body
@@ -102,12 +103,27 @@ export const createWithdraw = async (req: Request, res: Response) => {
           transport: http(),
         });
 
+        // Get swap transaction data from Brian API
+        const transactionData = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
+          },
+          body: JSON.stringify({
+              prompt: `Swap ${tx.data.amount} ${tx.data.tokenAddress} to USDC on ${chain.name}`,
+              address: userAddress,
+          })
+        }).then(res => res.json()) as TransactionResponse;
+
+        const swapData = transactionData.result[0].data.steps?.[0].data;
+
         const { request } = await publicClient.simulateContract({
           account,
           address: tx.deflatePortalAddress as `0x${string}`,
           abi: DEFLATE_PORTAL_ABI,
-          functionName: 'withdrawStrategy',
-          args: [tx.data],
+          functionName: 'executeStrategy',
+          args: [swapData],
         });
 
         const txReceipt = await client.writeContract(request);
@@ -150,7 +166,7 @@ export const createWithdraw = async (req: Request, res: Response) => {
       } else {
         await redis.del(userAddress);
       }
-    }
+    };
 
     res.json({
       success: true,
