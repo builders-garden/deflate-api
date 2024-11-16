@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { getExternalAccount } from "../../services/peanut";
+import { snakeToCamelCase } from "../../utils";
 
 export const fetchBankAccount = async (req: Request, res: Response) => {
   const user = req.user;
@@ -18,5 +19,5 @@ export const fetchBankAccount = async (req: Request, res: Response) => {
     return res.status(404).json({ error: "External account not found" });
   }
 
-  res.json(externalAccount);
+  res.json(snakeToCamelCase(externalAccount));
 };

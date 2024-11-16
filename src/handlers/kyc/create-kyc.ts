@@ -4,6 +4,7 @@ import {
   fetchKYCLinkById,
 } from "../../services/peanut";
 import { setCustomMetadata } from "../../services/privy";
+import { snakeToCamelCase } from "../../utils";
 
 export const createKYC = async (req: Request, res: Response) => {
   const { fullName, address, city, postalCode, country } = req.body;
@@ -29,5 +30,5 @@ export const createKYC = async (req: Request, res: Response) => {
     fullName,
   });
 
-  res.json(kycLink);
+  res.json(snakeToCamelCase(kycLink));
 };

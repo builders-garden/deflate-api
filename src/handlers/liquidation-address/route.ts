@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getOrCreateLiquidationAddress } from "../../services/peanut";
 import { BridgeChainPaymentRail } from "../../services/peanut/types";
+import { snakeToCamelCase } from "../../utils";
 
 export const fetchLiquidationAddress = async (req: Request, res: Response) => {
   const user = req.user;
@@ -13,5 +14,10 @@ export const fetchLiquidationAddress = async (req: Request, res: Response) => {
     user?.customMetadata.country === "USA" ? "us" : "iban",
     BridgeChainPaymentRail.BASE
   );
-  return res.json(liquidationAddress);
+  if (!liquidationAddress) {
+    return res
+      .status(400)
+      .json({ error: "There was an error getting the liquidation address" });
+  }
+  return res.json(snakeToCamelCase(liquidationAddress));
 };

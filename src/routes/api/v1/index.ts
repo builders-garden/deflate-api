@@ -22,7 +22,7 @@ const routes = [
   },
   {
     path: "/kyc",
-    method: "get",
+    method: "post",
     handler: createKYC,
     middleware: [authMiddleware],
   },

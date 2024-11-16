@@ -5,6 +5,7 @@ import {
   BridgeAccountType,
 } from "../../services/peanut/types";
 import { setCustomMetadata } from "../../services/privy";
+import { snakeToCamelCase } from "../../utils";
 
 export const createBankAccount = async (req: Request, res: Response) => {
   const body = req.body;
@@ -62,5 +63,5 @@ export const createBankAccount = async (req: Request, res: Response) => {
 
   await setCustomMetadata(user.id, metadata);
 
-  res.json(externalAccount);
+  res.json(snakeToCamelCase(externalAccount));
 };
