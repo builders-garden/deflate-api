@@ -34,6 +34,7 @@ export const createBankAccount = async (req: Request, res: Response) => {
       });
       return;
     }
+    user.customMetadata.bridgeCustomerId = kycLink.customer_id;
     await setCustomMetadata(user.id, {
       ...(user.customMetadata ?? {}),
       bridgeCustomerId: kycLink.customer_id,
