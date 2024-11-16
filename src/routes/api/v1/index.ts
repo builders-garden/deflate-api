@@ -9,6 +9,7 @@ import { deleteBankAccount } from "../../../handlers/bank-accounts/delete-bank-a
 import { fetchBankAccount } from "../../../handlers/bank-accounts/fetch-bank-account";
 import { fetchLiquidationAddress } from "../../../handlers/liquidation-address/route";
 import { fetchWithdrawals } from "../../../handlers/withdrawals/fetch-withdrawals";
+import { updateUser } from "../../../handlers/users/me/update-user";
 
 const router = Router();
 
@@ -60,6 +61,12 @@ const routes = [
     path: "/withdrawals",
     method: "get",
     handler: fetchWithdrawals,
+    middleware: [authMiddleware],
+  },
+  {
+    path: "/users/me",
+    method: "put",
+    handler: updateUser,
     middleware: [authMiddleware],
   },
 ];
