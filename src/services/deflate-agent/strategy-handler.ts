@@ -1,6 +1,4 @@
-import { BrianSDK } from "@brian-ai/sdk";
 import openai, { OpenAI } from "openai";
-
 
 interface DepositParams {
   userAddress: string;
@@ -30,31 +28,40 @@ export const getDepositStrategy = async ({
     });
 
     switch (strategy) {
-      case 1:
-        //fetch usdc lending APY 
-        const options = {
-            apiKey: process.env.BRIAN_API_KEY!,
-        };
-
-        const brian = new BrianSDK(options);
+      case 1:        
+       
         //fetch usdc lending APY on Base and Polygon
-        const baseUsdcLendingApy = await brian.transact(
-            {
+        const baseUsdcLendingApy = await fetch('https://api.brian.app/v1/transact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+            },
+            body: JSON.stringify({
                 prompt: "Give me investment advice for USDC on Base with liquidity > 5 milions",
                 address: userAddress,
-            }
-        )
-        const baseUsdcLendingApyDescription = baseUsdcLendingApy[0].data.description
+            })
+        }).then(res => res.json()) as Promise<any>;
+        console.log(baseUsdcLendingApy, "baseUsdcLendingApy")
+        const baseUsdcLendingApyDescription = (await baseUsdcLendingApy)[0].data.description;
+        console.log(baseUsdcLendingApyDescription, "baseUsdcLendingApyDescription")
+
         //fetch usdc lending APY on Base and Polygon
-        const poygonUsdcLendingApy = await brian.transact(
-            {
+        const polygonUsdcLendingApy = await fetch('https://api.brian.app/v1/transact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+            },
+            body: JSON.stringify({
                 prompt: "Give me investment advice for USDC on Polygon with liquidity > 5 milions",
                 address: userAddress,
-            }
-        )
-        const poygonUsdcLendingApyDescription = poygonUsdcLendingApy[0].data.description
+            })
+        }).then(res => res.json()) as Promise<any>;
 
-        const strategies = baseUsdcLendingApyDescription + poygonUsdcLendingApyDescription
+        const polygonUsdcLendingApyDescription = (await polygonUsdcLendingApy)[0].data.description;
+
+        const strategies = baseUsdcLendingApyDescription + polygonUsdcLendingApyDescription;
         console.log(strategies, "strategies")
 
         const response = await openai.chat.completions.create({
@@ -65,15 +72,22 @@ export const getDepositStrategy = async ({
         const strategyDescription = JSON.parse(response.choices[0].message.content!).strategies[0].description;
         console.log(strategyDescription, "strategyDescription")
 
-        const strategyTx = await brian.transact({
-            prompt: strategyDescription,
-            address: userAddress,
-        })
+        const strategyTx = await fetch('https://api.brian.app/v1/transact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+            },
+            body: JSON.stringify({
+                prompt: strategyDescription,
+                address: userAddress,
+            })
+        }).then(res => res.json()) as Promise<any>;
 
         console.log(strategyTx, "strategyTx")
 
-        const strategyTxData = strategyTx[0].data.steps?.[strategyTx[0].data.steps.length - 1].data
-        const chainId = strategyTx[0].data.fromChainId
+        const strategyTxData = (await strategyTx)[0].data.steps?.[(await strategyTx)[0].data.steps.length - 1].data
+        const chainId = (await strategyTx)[0].data.fromChainId
 
         // Strategy 1: Direct USDC deposit to Aave
         return {
@@ -86,24 +100,33 @@ export const getDepositStrategy = async ({
           }
         };
 
-      case 2: {
-        const options = {
-          apiKey: process.env.BRIAN_API_KEY!,
-        };
-        const brian = new BrianSDK(options);
-        
+      case 2: { 
         // Fetch APY data for both protocols
-        const aaveData = await brian.transact({
-          prompt: "Give me investment advice for USDC on Aave with liquidity > 5 millions",
-          address: userAddress,
-        });
+        const aaveData = await fetch('https://api.brian.app/v1/transact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+          },
+          body: JSON.stringify({
+            prompt: "Give me investment advice for USDC on Aave with liquidity > 5 millions",
+            address: userAddress,
+          })
+        }).then(res => res.json()) as Promise<any>;
         
-        const compoundData = await brian.transact({
-          prompt: "Give me investment advice for USDC on Compound with liquidity > 5 millions",
-          address: userAddress,
-        });
+        const compoundData = await fetch('https://api.brian.app/v1/transact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+          },
+          body: JSON.stringify({
+            prompt: "Give me investment advice for USDC on Compound with liquidity > 5 millions",
+            address: userAddress,
+          })
+        }).then(res => res.json()) as Promise<any>;
 
-        const strategies = aaveData[0].data.description + compoundData[0].data.description;
+        const strategies = (await aaveData)[0].data.description + (await compoundData)[0].data.description;
         
         const response = await openai.chat.completions.create({
           model: "gpt-4o-mini",
@@ -112,13 +135,20 @@ export const getDepositStrategy = async ({
 
         const strategyDescription = JSON.parse(response.choices[0].message.content!).strategies[0].description;
         
-        const strategyTx = await brian.transact({
-          prompt: strategyDescription,
-          address: userAddress,
-        });
+        const strategyTx = await fetch('https://api.brian.app/v1/transact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+            },
+            body: JSON.stringify({
+                prompt: strategyDescription,
+                address: userAddress,
+            })
+        }).then(res => res.json()) as Promise<any>;
 
-        const strategyTxData = strategyTx[0].data.steps?.[strategyTx[0].data.steps.length - 1].data;
-        const chainId = strategyTx[0].data.fromChainId;
+        const strategyTxData = (await strategyTx)[0].data.steps?.[(await strategyTx)[0].data.steps.length - 1].data;
+        const chainId = (await strategyTx)[0].data.fromChainId;
 
         return {
           success: true,
@@ -132,24 +162,33 @@ export const getDepositStrategy = async ({
       }
 
       case 3: {
-        const options = {
-          apiKey: process.env.BRIAN_API_KEY!,
-        };
-        const brian = new BrianSDK(options);
-        
         // Fetch APY data across multiple protocols and chains
-        const protocolQueries = await Promise.all([
-          brian.transact({
-            prompt: "Give me highest yield investment opportunities for USDC across all supported protocols",
-            address: userAddress,
-          }),
-          brian.transact({
-            prompt: "Give me stable yield farming strategies for USDC with minimum risk",
-            address: userAddress,
-          })
+        const [highYieldData, stableYieldData] = await Promise.all([
+          fetch('https://api.brian.app/v1/transact', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+            },
+            body: JSON.stringify({
+              prompt: "Give me highest yield investment opportunities for USDC across all supported protocols",
+              address: userAddress,
+            })
+          }).then(res => res.json()) as Promise<any>,
+          fetch('https://api.brian.app/v1/transact', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+            },
+            body: JSON.stringify({
+              prompt: "Give me stable yield farming strategies for USDC with minimum risk",
+              address: userAddress,
+            })
+          }).then(res => res.json()) as Promise<any>,
         ]);
 
-        const strategies = protocolQueries.map(q => q[0].data.description).join(' ');
+        const strategies = `${highYieldData[0].data.description} ${stableYieldData[0].data.description}`;
 
         const openai = new OpenAI({
           apiKey: process.env.OPENAI_API_KEY!,
@@ -166,13 +205,20 @@ export const getDepositStrategy = async ({
         console.log(strategyDescription.strategies, "strategyDescription.strategies")
         console.log(strategyDescription.strategies.length, "strategyDescription.strategies.length")
         
-        const strategyTx = await brian.transact({
-          prompt: strategyDescription,
-          address: userAddress,
-        });
+        const strategyTx = await fetch('https://api.brian.app/v1/transact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.BRIAN_API_KEY}`
+          },
+          body: JSON.stringify({
+            prompt: strategyDescription,
+            address: userAddress,
+          })
+        }).then(res => res.json()) as Promise<any>;
 
-        const strategyTxData = strategyTx[0].data.steps?.[strategyTx[0].data.steps.length - 1].data;
-        const chainId = strategyTx[0].data.fromChainId;
+        const strategyTxData = (await strategyTx)[0].data.steps?.[(await strategyTx)[0].data.steps.length - 1].data;
+        const chainId = (await strategyTx)[0].data.fromChainId;
 
         return {
           success: true,
