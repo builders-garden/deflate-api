@@ -27,7 +27,7 @@ const routes = [
     middleware: [authMiddleware],
   },
   {
-    path: "/kyc/:id",
+    path: "/kyc",
     method: "get",
     handler: fetchKYC,
     middleware: [validateParams(["id"]), authMiddleware],
