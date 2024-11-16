@@ -15,7 +15,7 @@ import { fetchReferrals } from "../../../handlers/referrals/fetch-referrals";
 import { fetchValueChart } from "../../../handlers/portfolio/fetch-value-chart";
 import { fetchProfitAndLoss } from "../../../handlers/portfolio/fetch-profit-and-loss";
 import { fetchCurrentValue } from "../../../handlers/portfolio/fetch-current-value";
-//import { createWithdrawal } from "../../../handlers/withdrawals/create-withdrawal";
+import { createWithdraw } from "../../../handlers/withdraws/create-withdraw";
 
 const router = Router();
 
@@ -104,8 +104,7 @@ const routes = [
     method: "get",
     handler: fetchCurrentValue,
     middleware: [authMiddleware],
-  }
-  /*
+  },
   {
     path: "/withdraws",
     method: "post",
