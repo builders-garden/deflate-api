@@ -46,10 +46,10 @@ const routes = [
     middleware: [authMiddleware],
   },
   {
-    path: "/bank-accounts/:id",
+    path: "/bank-accounts",
     method: "delete",
     handler: deleteBankAccount,
-    middleware: [validateParams(["id"]), authMiddleware],
+    middleware: [authMiddleware],
   },
   {
     path: "/liquidation-address",
