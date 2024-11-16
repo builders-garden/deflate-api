@@ -17,7 +17,6 @@ export const createKYC = async (req: Request, res: Response) => {
     country !== "USA"
   );
 
-  console.log(kycLink);
   await setCustomMetadata(user.id, {
     ...(user.customMetadata ?? {}),
     bridgeKycLinkId: kycLink.id,
