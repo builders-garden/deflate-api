@@ -14,4 +14,5 @@ export const environment = {
   AGENT_PRIVATE_KEY: process.env.AGENT_PRIVATE_KEY as string,
   BRIAN_API_KEY: process.env.BRIAN_API_KEY as string,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY as string,
+  ONE_INCH_API_KEY: process.env.ONE_INCH_API_KEY as string
 };
