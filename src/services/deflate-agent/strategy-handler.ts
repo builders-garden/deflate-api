@@ -4,7 +4,8 @@ import { TransactionResponse } from "./Brian-api-interface";
 interface DepositParams {
   userAddress: string;
   amount: number;
-  strategy: number;
+  strategy: number; // 1 or 2
+  userRiskProfile: string[];
 }
 
 interface StrategyResponse {
@@ -101,11 +102,40 @@ export const getDepositStrategy = async ({
   userAddress,
   amount,
   strategy,
+  userRiskProfile
 }: DepositParams): Promise<StrategyResponse> => {
     try {
         const openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY!,
         });
+
+        //if strategy is 2 and userRiskProfile is populated, make a call to the llm to get the right strategy id (2 or 3)
+        if (strategy === 2 && userRiskProfile.length > 0) {
+          const riskProfileResponse = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ 
+                role: "system", 
+                content: populateSystemTemplateForProfiling(
+                    userRiskProfile,
+                    amount
+                ) 
+            }],
+          });
+          // Clean and parse the response
+          const cleanRiskProfileContent = riskProfileResponse.choices[0].message.content!
+          .replace(/```json\n?/, '')
+            .replace(/```/, '')
+            .trim();
+          const parsedRiskProfileResponse = JSON.parse(cleanRiskProfileContent);
+          console.log(parsedRiskProfileResponse, "parsedRiskProfileResponse")
+          strategy = parsedRiskProfileResponse.strategy;
+          if (strategy !== 2 && strategy !== 3) {
+            return {
+              success: false,
+              error: "Invalid strategy selected"
+            };
+          }
+        }
 
         let strategies: string;
 
@@ -253,6 +283,21 @@ or in case of ETH/cbBTC pools:
 Each strategy must be a single deposit or swap action (if not stable pools). The sum of all deposits must equal {amount}.
 `;
 
+export const systemTemplateForProfiling = `
+You are an AI agent helping users invest their USDC according to their risk tolerance and goals.
+The user has provided the following info when replying to my questions: {risk_profile} and has {amount} USDC to invest.
+
+Available strategies:
+2 - medium risk. 50% stable, 50% volatile
+3 - high risk. 20% stable, 80% volatile
+
+Respond with a raw JSON object in this exact format (no markdown, no code blocks):
+{
+  "strategy": 2
+}
+
+`;
+
 //function to populate the system template with the actual values
 const populateSystemTemplate = (
   riskLevel: string,
@@ -263,4 +308,13 @@ const populateSystemTemplate = (
     .replace("{risk_level}", riskLevel)
     .replace("{amount}", amount.toString())
     .replace("{strategies}", strategies);
+};
+
+const populateSystemTemplateForProfiling = (
+  userRiskProfile: string[],
+  amount: number
+) => {
+  return systemTemplateForProfiling
+    .replace("{risk_profile}", userRiskProfile.join(", "))
+    .replace("{amount}", amount.toString());
 };

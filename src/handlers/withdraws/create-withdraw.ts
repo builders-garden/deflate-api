@@ -5,7 +5,8 @@ import { createPublicClient, createWalletClient, http } from "viem";
 import { base, polygon } from "viem/chains";
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
-import { Redis } from 'ioredis';
+import { Redis } from '@upstash/redis'
+
 
 // Define the input validation schema
 const withdrawSchema = z.object({
@@ -15,8 +16,10 @@ const withdrawSchema = z.object({
 // Type for the request body
 type WithdrawRequest = z.infer<typeof withdrawSchema>;
 
-// Initialize Redis client
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const redis = new Redis({
+    url: process.env.REDIS_URL as string,
+    token: process.env.REDIS_TOKEN as string,
+  })
 
 interface Position {
   timestamp: string;
@@ -42,7 +45,7 @@ export const createWithdraw = async (req: Request, res: Response) => {
       });
     }
 
-    const positions: Position[] = JSON.parse(positionsStr);
+    const positions: Position[] = JSON.parse(positionsStr.toString());
 
     // Group positions by chainId
     const positionsByChain = positions.reduce((acc, position) => {

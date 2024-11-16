@@ -8,10 +8,10 @@ import { getDepositStrategy } from "../../services/deflate-agent/strategy-handle
 import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
 import { BASE_DEFLATE_PORTAL_ADDRESS, POLYGON_DEFLATE_PORTAL_ADDRESS } from "../../utils/constants";
-import { Redis } from 'ioredis';
-
+import { Redis } from '@upstash/redis'
 // Define the input validation schema
 const depositSchema = z.object({
+  userRiskProfile: z.string().array(),
   userAddress: z.string().startsWith("0x"),
   amount: z.number().positive(),
   strategy: z.number().min(1).max(3),
@@ -20,13 +20,14 @@ const depositSchema = z.object({
 // Type for the request body
 type DepositRequest = z.infer<typeof depositSchema>;
 
-// Initialize Redis client
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-
+const redis = new Redis({
+  url: process.env.REDIS_URL as string,
+  token: process.env.REDIS_TOKEN as string,
+})
 export const createDeposit = async (req: Request, res: Response) => {
   try {
     // Validate the request body
-    const { userAddress, amount, strategy } = depositSchema.parse(req.body);
+    const { userAddress, amount, strategy, userRiskProfile } = depositSchema.parse(req.body);
 
     //load Account from Agent Private Key
     const account = privateKeyToAccount(
@@ -38,6 +39,7 @@ export const createDeposit = async (req: Request, res: Response) => {
       userAddress,
       amount,
       strategy,
+      userRiskProfile
     });
 
     const { success, data } = depositStrategy;
@@ -69,7 +71,7 @@ export const createDeposit = async (req: Request, res: Response) => {
                 chain: chain,
                 transport: http(),
             });
-
+            
             const { request } = await publicClient.simulateContract({
                 account,
                 address: deflatePortalAddress as `0x${string}`,
@@ -105,7 +107,7 @@ export const createDeposit = async (req: Request, res: Response) => {
         try {
             // Get existing transactions for this user
             const existingTxs = await redis.get(userAddress) || '[]';
-            const allTxs = [...JSON.parse(existingTxs), ...successfulTxs];
+            const allTxs = [...JSON.parse(existingTxs.toString()), ...successfulTxs];
             
             // Store updated transactions list
             await redis.set(userAddress, JSON.stringify(allTxs));
