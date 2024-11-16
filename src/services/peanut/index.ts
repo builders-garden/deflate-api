@@ -287,10 +287,10 @@ export const getOrCreateLiquidationAddress = async (
         accountType === "us" ? BridgeFiatCurrency.USD : BridgeFiatCurrency.EUR,
       ...(accountType === "iban"
         ? {
-            destinationSepaReference: "Withdrawal from Drift",
+            destinationSepaReference: "Withdrawal from Deflate",
           }
         : {
-            destinationAchReference: "by Drift",
+            destinationAchReference: "by Deflate",
           }),
     });
     return newLiquidationAddress;

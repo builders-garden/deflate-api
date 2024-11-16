@@ -36,6 +36,9 @@ export const createBankAccount = async (req: Request, res: Response) => {
     user.customMetadata.bridgeCustomerId,
     {
       accountNumber: body.accountNumber,
+      ...(user.customMetadata.country === "USA"
+        ? { routingNumber: body.routingNumber }
+        : { bic: body.routingNumber }),
       country: user.customMetadata.country,
       address: {
         street: user.customMetadata.address,
