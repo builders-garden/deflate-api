@@ -10,6 +10,8 @@ import { fetchBankAccount } from "../../../handlers/bank-accounts/fetch-bank-acc
 import { fetchLiquidationAddress } from "../../../handlers/liquidation-address/route";
 import { fetchWithdrawals } from "../../../handlers/withdrawals/fetch-withdrawals";
 import { updateUser } from "../../../handlers/users/me/update-user";
+import { createDeposit } from "../../../handlers/deposits/create-deposit";
+//import { createWithdrawal } from "../../../handlers/withdrawals/create-withdrawal";
 
 const router = Router();
 
@@ -69,6 +71,20 @@ const routes = [
     handler: updateUser,
     middleware: [authMiddleware],
   },
+  {
+    path: "/deposits",
+    method: "post",
+    handler: createDeposit,
+    middleware: [authMiddleware],
+  },
+  /*
+  {
+    path: "/withdrawals",
+    method: "post",
+    handler: createWithdrawal,
+    middleware: [authMiddleware],
+  },
+  */
 ];
 
 // Register routes

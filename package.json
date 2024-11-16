@@ -6,10 +6,13 @@
   "author": "lim0n3 <simonestaffa96@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@brian-ai/sdk": "^0.3.3",
     "@privy-io/server-auth": "^1.16.3",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "viem": "^2.21.45"
+    "openai": "^4.72.0",
+    "viem": "^2.21.45",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
