@@ -17,7 +17,7 @@ export const fetchValueChartData = async (
     value_usd: number;
   }[];
 }> => {
-  const url = `${ONE_INCH_API_BASE_URL}/value_chart?addresses=${address}&timerange=${timerange}`;
+  const url = `${ONE_INCH_API_BASE_URL}/value_chart?addresses=${address}&timerange=${timerange}&use_cache=true`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${environment.ONE_INCH_API_KEY}`,
@@ -37,7 +37,7 @@ export const fetchProfitAndLossData = async (
     roi: number;
   }[];
 }> => {
-  const url = `${ONE_INCH_API_BASE_URL}/profit_and_loss?addresses=${address}&timerange=${timerange}`;
+  const url = `${ONE_INCH_API_BASE_URL}/profit_and_loss?addresses=${address}&timerange=${timerange}&use_cache=true`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${environment.ONE_INCH_API_KEY}`,
@@ -55,7 +55,7 @@ export const fetchCurrentValueData = async (
     value_usd: number;
   }[];
 }> => {
-  const url = `${ONE_INCH_API_BASE_URL}/current_value?addresses=${address}`;
+  const url = `${ONE_INCH_API_BASE_URL}/current_value?addresses=${address}&use_cache=true`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${environment.ONE_INCH_API_KEY}`,
