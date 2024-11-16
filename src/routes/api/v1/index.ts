@@ -12,6 +12,9 @@ import { fetchWithdrawals } from "../../../handlers/withdrawals/fetch-withdrawal
 import { updateUser } from "../../../handlers/users/me/update-user";
 import { createDeposit } from "../../../handlers/deposits/create-deposit";
 import { fetchReferrals } from "../../../handlers/referrals/fetch-referrals";
+import { fetchValueChart } from "../../../handlers/portfolio/fetch-value-chart";
+import { fetchProfitAndLoss } from "../../../handlers/portfolio/fetch-profit-and-loss";
+import { fetchCurrentValue } from "../../../handlers/portfolio/fetch-current-value";
 //import { createWithdrawal } from "../../../handlers/withdrawals/create-withdrawal";
 
 const router = Router();
@@ -84,6 +87,24 @@ const routes = [
     handler: fetchReferrals,
     middleware: [authMiddleware],
   },
+  {
+    path: "/portfolio/value-chart",
+    method: "get",
+    handler: fetchValueChart,
+    middleware: [authMiddleware],
+  },
+  {
+    path: "/portfolio/profit-and-loss",
+    method: "get",
+    handler: fetchProfitAndLoss,
+    middleware: [authMiddleware],
+  },
+  {
+    path: "/portfolio/current-value",
+    method: "get",
+    handler: fetchCurrentValue,
+    middleware: [authMiddleware],
+  }
   /*
   {
     path: "/withdrawals",
