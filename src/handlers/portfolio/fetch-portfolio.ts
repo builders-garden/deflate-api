@@ -14,9 +14,9 @@ export const fetchPortfolio = async (req: Request, res: Response) => {
     PLACEHOLDER_ADDRESS,
     timerange
   );
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const valueChart = await fetchValueChartData(PLACEHOLDER_ADDRESS, timerange);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1100));
   const currentValue = await fetchCurrentValueData(PLACEHOLDER_ADDRESS);
   res.json({
     profitAndLoss: profitAndLoss.result.find((i) => !i.chain_id),
