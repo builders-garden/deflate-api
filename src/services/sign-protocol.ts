@@ -41,9 +41,9 @@ export const createAttestation = async (data: {
   await sendUsdc(referredAddress!, 1);
 };
 
-export const getAttestations = async (data: { referredENS: string }) => {
+export const getAttestations = async (username: string) => {
   const indexService = new IndexService("mainnet");
-  const referredAddress = await getEnsAddress(data.referredENS);
+  const referredAddress = await getEnsAddress(`${username}.deflateapp.eth`);
   return await indexService.queryAttestationList({
     schemaId: "onchain_evm_8453_0x77",
     attester: agentAccount.address,

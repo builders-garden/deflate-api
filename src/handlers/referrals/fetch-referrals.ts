@@ -6,8 +6,6 @@ export const fetchReferrals = async (req: Request, res: Response) => {
   if (!user.customMetadata.username) {
     return res.status(400).json({ error: "Set a username first" });
   }
-  const attestations = await getAttestations({
-    referredENS: `${user.customMetadata.username}.deflateapp.eth`,
-  });
+  const attestations = await getAttestations(user.customMetadata.username);
   res.json(attestations);
 };

@@ -11,6 +11,7 @@ import { fetchLiquidationAddress } from "../../../handlers/liquidation-address/r
 import { fetchWithdrawals } from "../../../handlers/withdrawals/fetch-withdrawals";
 import { updateUser } from "../../../handlers/users/me/update-user";
 import { createDeposit } from "../../../handlers/deposits/create-deposit";
+import { fetchReferrals } from "../../../handlers/referrals/fetch-referrals";
 //import { createWithdrawal } from "../../../handlers/withdrawals/create-withdrawal";
 
 const router = Router();
@@ -75,6 +76,12 @@ const routes = [
     path: "/deposits",
     method: "post",
     handler: createDeposit,
+    middleware: [authMiddleware],
+  },
+  {
+    path: "/referrals",
+    method: "get",
+    handler: fetchReferrals,
     middleware: [authMiddleware],
   },
   /*
