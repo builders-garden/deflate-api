@@ -55,7 +55,6 @@ export const createDeposit = async (req: Request, res: Response) => {
     });
 
     const { success, data } = depositStrategy;
-    console.log;
     const totalTransactions = data?.totalTransactions;
     const transactions = data?.transactions;
 
@@ -71,17 +70,25 @@ export const createDeposit = async (req: Request, res: Response) => {
     if (fake) {
       console.log("fake onramping user");
 
-      // send 5 USDC to the smart wallet
-      const fundTx = await baseWalletClient.writeContract({
+      const balance = await basePublicClient.readContract({
         abi: erc20Abi,
         address: BASE_USDC_ADDRESS,
-        functionName: "transfer",
-        args: [userAddress as `0x${string}`, 5000000n],
+        functionName: "balanceOf",
+        args: [user?.customMetadata.smartAccountAddress as `0x${string}`],
       });
+      if (balance < 5000000n) {
+        // send 5 USDC to the smart wallet
+        const fundTx = await baseWalletClient.writeContract({
+          abi: erc20Abi,
+          address: BASE_USDC_ADDRESS,
+          functionName: "transfer",
+          args: [userAddress as `0x${string}`, 5000000n],
+        });
 
-      await basePublicClient.waitForTransactionReceipt({
-        hash: fundTx,
-      });
+        await basePublicClient.waitForTransactionReceipt({
+          hash: fundTx,
+        });
+      }
     }
 
     console.log(transactions, "transactions------");
@@ -97,7 +104,10 @@ export const createDeposit = async (req: Request, res: Response) => {
           data: encodeFunctionData({
             abi: erc20Abi,
             functionName: "approve",
-            args: [BASE_DEFLATE_PORTAL_ADDRESS as `0x${string}`, BigInt(2 ** 256 - 1)],
+            args: [
+              BASE_DEFLATE_PORTAL_ADDRESS as `0x${string}`,
+              BigInt(2 ** 256 - 1),
+            ],
           }),
           value: 0n,
         },
