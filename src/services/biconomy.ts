@@ -9,17 +9,27 @@ import {
   SessionData,
   smartSessionUseActions,
   Call,
+  createNexusSessionClient,
+  Execution,
 } from "@biconomy/sdk";
-import { Chain, encodeFunctionData, Hex, http } from "viem";
+import {
+  Chain,
+  ClientConfig,
+  EIP1193RequestFn,
+  Hex,
+  http,
+  TransportConfig,
+} from "viem";
 import { base } from "viem/chains";
-import { privateKeyToAccount } from "viem/accounts";
+import { privateKeyToAccount, toAccount } from "viem/accounts";
 import { environment } from "../config/environment";
 
 export const sendTransactionWithSession = async (
   sessionData: SessionData,
-  calls: Call[]
+  calls: Execution[]
 ) => {
   try {
+    console.log("----- sessionData", sessionData);
     const agentAccount = privateKeyToAccount(
       environment.AGENT_PRIVATE_KEY as `0x${string}`
     );
@@ -28,27 +38,62 @@ export const sendTransactionWithSession = async (
       transport: http(environment.BICONOMY_BASE_PAYMASTER_URL),
     });
 
-    // Create base nexus client
     const nexusClient = await createNexusClient({
+      accountAddress: sessionData.granter,
+      signer: agentAccount,
+      chain: base,
+      transport: http(),
+      bundlerTransport: http(environment.BICONOMY_BASE_BUNDLER_URL),
+      paymaster: paymasterClient,
+      paymasterContext: {
+        mode: "SPONSORED",
+        expiryDuration: 300,
+        calculateGasLimits: true,
+        sponsorshipInfo: {
+          smartAccountInfo: {
+            name: "BICONOMY",
+            version: "2.0.0",
+          },
+        },
+      },
+    });
+
+    const usePermissionsModule = toSmartSessionsValidator({
+      account: nexusClient.account,
+      signer: agentAccount,
+      moduleData: {
+        permissionId: sessionData.moduleData.permissionId as Hex,
+      },
+    });
+
+    // Create base nexus client
+    const nexusSessionClient = await createNexusSessionClient({
       signer: agentAccount,
       accountAddress: sessionData.granter,
       chain: base,
       transport: http(),
       bundlerTransport: http(environment.BICONOMY_BASE_BUNDLER_URL),
       paymaster: paymasterClient,
-    });
-
-    const sessionsModule = toSmartSessionsValidator({
-      account: nexusClient.account,
-      signer: agentAccount,
+      paymasterContext: {
+        mode: "SPONSORED",
+        expiryDuration: 300,
+        calculateGasLimits: true,
+        sponsorshipInfo: {
+          smartAccountInfo: {
+            name: "BICONOMY",
+            version: "2.0.0",
+          },
+        },
+      },
+      module: usePermissionsModule,
     });
 
     // Install the module
-    const useSmartSessionNexusClient = nexusClient.extend(
-      smartSessionUseActions(sessionsModule)
+    const useSmartSessionNexusClient = nexusSessionClient.extend(
+      smartSessionUseActions(usePermissionsModule)
     );
     const userOpHash = await useSmartSessionNexusClient.usePermission({
-      calls,
+      actions: calls,
     });
     return useSmartSessionNexusClient;
   } catch (err) {

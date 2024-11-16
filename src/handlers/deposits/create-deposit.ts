@@ -93,26 +93,31 @@ export const createDeposit = async (req: Request, res: Response) => {
 
     console.log(transactions, "transactions------");
 
-    const compressedSessionData = await redis.get(
-      user?.customMetadata.smartAccountAddress
-    );
-    await sendTransactionWithSession(
-      JSON.parse(compressedSessionData as string) as SessionData,
-      [
-        {
-          to: BASE_USDC_ADDRESS,
-          data: encodeFunctionData({
-            abi: erc20Abi,
-            functionName: "approve",
-            args: [
-              BASE_DEFLATE_PORTAL_ADDRESS as `0x${string}`,
-              BigInt(2 ** 256 - 1),
-            ],
-          }),
-          value: 0n,
-        },
-      ]
-    );
+    // const totalSupply = await basePublicClient.readContract({
+    //   abi: erc20Abi,
+    //   address: BASE_USDC_ADDRESS,
+    //   functionName: "totalSupply",
+    // });
+    // const userData = (await redis.get(
+    //   user?.customMetadata.smartAccountAddress
+    // )) as any;
+
+    // await sendTransactionWithSession(
+    //   JSON.parse(userData?.compressedSessionData as string) as SessionData,
+    //   [
+    //     {
+    //       target: BASE_USDC_ADDRESS,
+    //       callData: encodeFunctionData({
+    //         abi: erc20Abi,
+    //         functionName: "approve",
+    //         args: [BASE_DEFLATE_PORTAL_ADDRESS as `0x${string}`, totalSupply],
+    //       }),
+    //       value: BigInt(0),
+    //     },
+    //   ]
+    // );
+
+    // console.log("sent tx with session------");
 
     // Execute each transaction sequentially
     const txResults = [];
@@ -167,7 +172,7 @@ export const createDeposit = async (req: Request, res: Response) => {
     }
 
     // Store successful transactions in Redis
-    if (successfulTxs.length > 0) {
+    if (successfulTxs?.length > 0) {
       try {
         // Get existing transactions for this user
         const existingTxs = (await redis.get(userAddress)) || "[]";
