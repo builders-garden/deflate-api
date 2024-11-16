@@ -107,12 +107,12 @@ const routes = [
   }
   /*
   {
-    path: "/withdrawals",
+    path: "/withdraws",
     method: "post",
-    handler: createWithdrawal,
+    handler: createWithdraw,
     middleware: [authMiddleware],
   },
-  */
+  
 ];
 
 // Register routes

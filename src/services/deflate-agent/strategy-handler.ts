@@ -15,6 +15,8 @@ interface StrategyResponse {
       strategy: number;
       details: string;
       chainId: number;
+      tokenAddress: string;
+      tokenAmount: number;
     }>;
     totalTransactions: number;
   };
@@ -185,7 +187,9 @@ export const getDepositStrategy = async ({
                 strategy,
                 details: item.data.description,
                 data: item.data.steps?.[item.data.steps.length - 1].data,
-                chainId: item.data.fromChainId || 0
+                chainId: item.data.fromChainId || 0,
+                tokenAddress: item.data.fromToken?.address as `0x${string}`,
+                tokenAmount: Number(item.data.fromAmount) || 0,
             }));
             console.log(transactions, "transactions")
             console.log(transactions.length, "transactions.length")
