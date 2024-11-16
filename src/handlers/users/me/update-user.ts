@@ -7,12 +7,12 @@ export const updateUser = async (req: Request, res: Response) => {
   const { username, mode, referrer, answer1, answer2, answer3 } = req.body;
   await setCustomMetadata(user.id, {
     ...(user.customMetadata ?? {}),
-    username,
-    mode,
-    referrer,
-    answer1,
-    answer2,
-    answer3,
+    ...(username && { username }),
+    ...(mode && { mode }),
+    ...(referrer && { referrer }),
+    ...(answer1 && { answer1 }),
+    ...(answer2 && { answer2 }),
+    ...(answer3 && { answer3 }),
   });
   return res.json(snakeToCamelCase(user));
 };
