@@ -77,6 +77,7 @@ export const createWithdraw = async (req: Request, res: Response) => {
           deflatePortalAddress,
           data: withdrawData,
           originalPosition: position,
+
         });
       }
     }
@@ -89,6 +90,7 @@ export const createWithdraw = async (req: Request, res: Response) => {
 
     for (const tx of transactions) {
       try {
+        /*
         const chain = tx.chainId === 8453 ? base : polygon;
 
         const client = createWalletClient({
@@ -125,19 +127,37 @@ export const createWithdraw = async (req: Request, res: Response) => {
           address: tx.deflatePortalAddress as `0x${string}`,
           abi: DEFLATE_PORTAL_ABI,
           functionName: "executeStrategy",
-          args: [swapData],
+          args: [swapData as `0x${string}`],
         });
 
         const txReceipt = await client.writeContract(request);
         const txReceiptData = await publicClient.waitForTransactionReceipt({
           hash: txReceipt,
         });
+        */
+       // Get swap transaction data from Brian API
+       const transactionData = (await fetch(
+        "https://staging-api.brianknows.org/api/v0/agent/transaction",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+          },
+          body: JSON.stringify({
+            prompt: `Swap ${tx.data.amount} ${tx.data.tokenAddress} to USDC on Base chain`,
+            address: userAddress,
+          }),
+        }
+      ).then((res) => res.json())) as TransactionResponse;
+
+      const swapData = transactionData.result[0].data.steps?.[0].data;
 
         txResults.push({
           chainId: tx.chainId,
-          transactionHash: txReceiptData.transactionHash,
           position: tx.originalPosition,
           success: true,
+          transactionData: swapData,
         });
       } catch (error) {
         console.error(`Withdrawal transaction failed:`, error);
@@ -173,9 +193,7 @@ export const createWithdraw = async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: {
-        userAddress,
-        withdrawals: txResults,
-        timestamp: new Date().toISOString(),
+        txResults
       },
     });
   } catch (error) {

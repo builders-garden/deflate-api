@@ -59,6 +59,7 @@ export const createDeposit = async (req: Request, res: Response) => {
     const { success, data } = depositStrategy;
     const totalTransactions = data?.totalTransactions;
     const transactions = data?.transactions;
+    /*
 
     const basePublicClient = createPublicClient({
       chain: base,
@@ -120,13 +121,13 @@ export const createDeposit = async (req: Request, res: Response) => {
     // );
 
     // console.log("sent tx with session------");
-
+*/
     // Execute each transaction sequentially
-    const txResults = [];
     const successfulTxs = [];
 
     for (const tx of transactions!) {
       try {
+        /*
         const chain = tx.chainId === 8453 ? base : polygon;
         const deflatePortalAddress =
           tx.chainId === 8453
@@ -152,11 +153,11 @@ export const createDeposit = async (req: Request, res: Response) => {
         const txReceiptData = await publicClient.waitForTransactionReceipt({
           hash,
         });
+        */
 
         // Store successful transaction data
         successfulTxs.push({
           timestamp: new Date().toISOString(),
-          transactionHash: txReceiptData.transactionHash,
           chainId: tx.chainId,
           tokenAddress: tx.tokenAddress,
           tokenAmount: tx.tokenAmount,
@@ -164,7 +165,6 @@ export const createDeposit = async (req: Request, res: Response) => {
           strategy: tx.strategy,
         });
 
-        txResults.push(txReceiptData);
       } catch (error) {
         console.error(`Transaction failed:`, error);
         // Continue with next transaction
@@ -192,12 +192,7 @@ export const createDeposit = async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: {
-        userAddress,
-        amount,
-        strategy,
-        timestamp: new Date().toISOString(),
-        status: "pending",
-        txHashes: txResults.map((tx) => tx.transactionHash),
+        transactions
       },
     });
   } catch (error) {
