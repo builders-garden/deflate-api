@@ -6,7 +6,7 @@
   "author": "lim0n3 <simonestaffa96@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@biconomy/sdk": "^0.0.7",
+    "@biconomy/sdk": "^0.0.10",
     "@ethsign/sp-sdk": "^0.7.8",
     "@privy-io/server-auth": "^1.16.3",
     "@rhinestone/module-sdk": "^0.1.25",

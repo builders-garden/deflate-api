@@ -1,6 +1,8 @@
 import openai, { OpenAI } from "openai";
 import { TransactionResponse } from "./Brian-api-interface";
 
+const BRIAN_API_BASE_URL = "https://a4ab-210-1-49-170.ngrok-free.app";
+
 interface DepositParams {
   userAddress: string;
   amount: number;
@@ -25,227 +27,251 @@ interface StrategyResponse {
 }
 
 const findStableLiquidityCross = async (userAddress: string) => {
-    const baseUsdcLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
-        },
-        body: JSON.stringify({
-            prompt: "Give me investment advice for usdc on base with liquidity > 5 milions",
-            address: userAddress,
-        })
-    }).then(res => res.json()) as TransactionResponse;
+  const baseUsdcLendingApy = (await fetch(
+    `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+      },
+      body: JSON.stringify({
+        prompt:
+          "Give me investment advice for usdc on base with liquidity > 5 milions",
+        address: userAddress,
+      }),
+    }
+  ).then((res) => res.json())) as TransactionResponse;
 
-    const polygonUsdcLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
-        },
-        body: JSON.stringify({
-            prompt: "Give me investment advice for usdc on polygon with liquidity > 5 milions",
-            address: userAddress,
-        })
-    }).then(res => res.json()) as TransactionResponse;
+  const polygonUsdcLendingApy = (await fetch(
+    `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+      },
+      body: JSON.stringify({
+        prompt:
+          "Give me investment advice for usdc on polygon with liquidity > 5 milions",
+        address: userAddress,
+      }),
+    }
+  ).then((res) => res.json())) as TransactionResponse;
 
-    return {
-        baseStrategy: {
-            description: baseUsdcLendingApy.result[0].data.description,
-            chainId: baseUsdcLendingApy.result[0].data.fromChainId
-        },
-        polygonStrategy: {
-            description: polygonUsdcLendingApy.result[0].data.description,
-            chainId: polygonUsdcLendingApy.result[0].data.fromChainId
-        }
-    };
+  return {
+    baseStrategy: {
+      description: baseUsdcLendingApy.result[0].data.description,
+      chainId: baseUsdcLendingApy.result[0].data.fromChainId,
+    },
+    polygonStrategy: {
+      description: polygonUsdcLendingApy.result[0].data.description,
+      chainId: polygonUsdcLendingApy.result[0].data.fromChainId,
+    },
+  };
 };
 
 const findLiquiditySingle = async (userAddress: string) => {
-      const baseEthLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
-        },
-        body: JSON.stringify({
-            prompt: "Give me investment advice for wsteth on base with liquidity > 20 milions on aave",
-            address: userAddress,
-        })
-    }).then(res => res.json()) as TransactionResponse;
+  const baseEthLendingApy = (await fetch(
+    `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+      },
+      body: JSON.stringify({
+        prompt:
+          "Give me investment advice for wsteth on base with liquidity > 20 milions on aave",
+        address: userAddress,
+      }),
+    }
+  ).then((res) => res.json())) as TransactionResponse;
 
-    const baseCbBtcLendingApy = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
-        },
-        body: JSON.stringify({
-            prompt: "Give me investment advice for cbbtc on base with liquidity > 20 milions on aave",
-            address: userAddress,
-        })
-    }).then(res => res.json()) as TransactionResponse;
+  const baseCbBtcLendingApy = (await fetch(
+    `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+      },
+      body: JSON.stringify({
+        prompt:
+          "Give me investment advice for cbbtc on base with liquidity > 20 milions on aave",
+        address: userAddress,
+      }),
+    }
+  ).then((res) => res.json())) as TransactionResponse;
 
-    return {
-        baseEth: {
-            description: baseEthLendingApy.result[0].data.description,
-            chainId: baseEthLendingApy.result[0].data.fromChainId
-        },
-        baseCbBtc: {
-            description: baseCbBtcLendingApy.result[0].data.description,
-            chainId: baseCbBtcLendingApy.result[0].data.fromChainId
-        }
-    };
+  return {
+    baseEth: {
+      description: baseEthLendingApy.result[0].data.description,
+      chainId: baseEthLendingApy.result[0].data.fromChainId,
+    },
+    baseCbBtc: {
+      description: baseCbBtcLendingApy.result[0].data.description,
+      chainId: baseCbBtcLendingApy.result[0].data.fromChainId,
+    },
+  };
 };
 
 export const getDepositStrategy = async ({
   userAddress,
   amount,
   strategy,
-  userRiskProfile
+  userRiskProfile,
 }: DepositParams): Promise<StrategyResponse> => {
-    try {
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY!,
-        });
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+    });
 
-        //if strategy is 2 and userRiskProfile is populated, make a call to the llm to get the right strategy id (2 or 3)
-        if (strategy === 2 && userRiskProfile.length > 0) {
-          const riskProfileResponse = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [{ 
-                role: "system", 
-                content: populateSystemTemplateForProfiling(
-                    userRiskProfile,
-                    amount
-                ) 
-            }],
-          });
-          // Clean and parse the response
-          const cleanRiskProfileContent = riskProfileResponse.choices[0].message.content!
-          .replace(/```json\n?/, '')
-            .replace(/```/, '')
-            .trim();
-          const parsedRiskProfileResponse = JSON.parse(cleanRiskProfileContent);
-          console.log(parsedRiskProfileResponse, "parsedRiskProfileResponse")
-          strategy = parsedRiskProfileResponse.strategy;
-          if (strategy !== 2 && strategy !== 3) {
-            return {
-              success: false,
-              error: "Invalid strategy selected"
-            };
-          }
-        }
-
-        let strategies: string;
-
-        switch (strategy) {
-            case 1: {
-                // 100% stable cross-chain
-                const crossChainResults = await findStableLiquidityCross(userAddress);
-                strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId})`;
-                console.log(strategies, "strategies")
-                break;
-            }
-            case 2: {
-                // 50% stable cross-chain, 50% single
-                const crossChainResults = await findStableLiquidityCross(userAddress);
-                const singleResults = await findLiquiditySingle(userAddress);
-                strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
-                console.log(strategies, "strategies")
-                break;
-            }
-            case 3: {
-                // 20% stable cross-chain, 80% single
-                const crossChainResults = await findStableLiquidityCross(userAddress);
-                const singleResults = await findLiquiditySingle(userAddress);
-                strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
-                console.log(strategies, "strategies")
-                break;
-            }
-            default:
-                return {
-                    success: false,
-                    error: "Invalid strategy selected"
-                };
-        }
-
-        //
-
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [{ 
-                role: "system", 
-                content: populateSystemTemplate(
-                    strategy.toString(), 
-                    amount,
-                    strategies
-                ) 
-            }],
-        });
-
-        // Clean and parse the response
-        const cleanContent = response.choices[0].message.content!
-            .replace(/```json\n?/, '')
-            .replace(/```/, '')
-            .trim();
-
-        try {
-            const parsedResponse = JSON.parse(cleanContent);
-            console.log(parsedResponse, "parsedResponse")
-            
-            // Join strategies with "and then"
-            const strategyDescriptions = parsedResponse.strategies
-                .map((s: { description: string }) => s.description)
-                .join(' and then ');
-            console.log(strategyDescriptions, "strategyDescriptions")
-            const strategyTx = await fetch('https://staging-api.brianknows.org/api/v0/agent/transaction', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-brian-api-key': `${process.env.BRIAN_API_KEY}`
-                },
-                body: JSON.stringify({
-                    prompt: strategyDescriptions,
-                    address: userAddress,
-                })
-            }).then(res => res.json()) as TransactionResponse;
-            console.log(strategyTx, "strategyTx")
-
-            // Map each result to the desired format
-            const transactions = strategyTx.result.map(item => ({
-                strategy,
-                details: item.data.description,
-                data: item.data.steps?.[item.data.steps.length - 1].data,
-                chainId: item.data.fromChainId || 0,
-                tokenAddress: item.data.fromToken?.address as `0x${string}`,
-                tokenAmount: Number(item.data.fromAmount) || 0,
-            }));
-            console.log(transactions, "transactions")
-            console.log(transactions.length, "transactions.length")
-
-
-
-            return {
-                success: true,
-                data: {
-                    transactions,
-                    totalTransactions: transactions.length
-                }
-            };
-
-        } catch (parseError) {
-            console.error("JSON parsing error:", parseError, "Raw content:", cleanContent);
-            throw new Error("Failed to parse strategy response");
-        }
-
-    } catch (error) {
-        console.error("Strategy execution error:", error);
+    //if strategy is 2 and userRiskProfile is populated, make a call to the llm to get the right strategy id (2 or 3)
+    if (strategy === 2 && userRiskProfile.length > 0) {
+      const riskProfileResponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: populateSystemTemplateForProfiling(
+              userRiskProfile,
+              amount
+            ),
+          },
+        ],
+      });
+      // Clean and parse the response
+      const cleanRiskProfileContent = riskProfileResponse.choices[0].message
+        .content!.replace(/```json\n?/, "")
+        .replace(/```/, "")
+        .trim();
+      const parsedRiskProfileResponse = JSON.parse(cleanRiskProfileContent);
+      console.log(parsedRiskProfileResponse, "parsedRiskProfileResponse");
+      strategy = parsedRiskProfileResponse.strategy;
+      if (strategy !== 2 && strategy !== 3) {
         return {
-            success: false,
-            error: "Failed to execute deposit strategy"
+          success: false,
+          error: "Invalid strategy selected",
+        };
+      }
+    }
+
+    let strategies: string;
+
+    switch (strategy) {
+      case 1: {
+        // 100% stable cross-chain
+        const crossChainResults = await findStableLiquidityCross(userAddress);
+        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId})`;
+        console.log(strategies, "strategies");
+        break;
+      }
+      case 2: {
+        // 50% stable cross-chain, 50% single
+        const crossChainResults = await findStableLiquidityCross(userAddress);
+        const singleResults = await findLiquiditySingle(userAddress);
+        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
+        console.log(strategies, "strategies");
+        break;
+      }
+      case 3: {
+        // 20% stable cross-chain, 80% single
+        const crossChainResults = await findStableLiquidityCross(userAddress);
+        const singleResults = await findLiquiditySingle(userAddress);
+        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
+        console.log(strategies, "strategies");
+        break;
+      }
+      default:
+        return {
+          success: false,
+          error: "Invalid strategy selected",
         };
     }
+
+    //
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: populateSystemTemplate(
+            strategy.toString(),
+            amount,
+            strategies
+          ),
+        },
+      ],
+    });
+
+    // Clean and parse the response
+    const cleanContent = response.choices[0].message
+      .content!.replace(/```json\n?/, "")
+      .replace(/```/, "")
+      .trim();
+
+    try {
+      const parsedResponse = JSON.parse(cleanContent);
+      console.log(parsedResponse, "parsedResponse");
+
+      // Join strategies with "and then"
+      const strategyDescriptions = parsedResponse.strategies
+        .map((s: { description: string }) => s.description)
+        .join(" and then ");
+      console.log(strategyDescriptions, "strategyDescriptions");
+      const strategyTx = (await fetch(
+        `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+          },
+          body: JSON.stringify({
+            prompt: strategyDescriptions,
+            address: userAddress,
+          }),
+        }
+      ).then((res) => res.json())) as TransactionResponse;
+      console.log(strategyTx, "strategyTx");
+
+      // Map each result to the desired format
+      const transactions = strategyTx.result.map((item) => ({
+        strategy,
+        details: item.data.description,
+        data: item.data.steps?.[item.data.steps.length - 1].data,
+        chainId: item.data.fromChainId || 0,
+        tokenAddress: item.data.fromToken?.address as `0x${string}`,
+        tokenAmount: Number(item.data.fromAmount) || 0,
+      }));
+      console.log(transactions, "transactions");
+      console.log(transactions.length, "transactions.length");
+
+      return {
+        success: true,
+        data: {
+          transactions,
+          totalTransactions: transactions.length,
+        },
+      };
+    } catch (parseError) {
+      console.error(
+        "JSON parsing error:",
+        parseError,
+        "Raw content:",
+        cleanContent
+      );
+      throw new Error("Failed to parse strategy response");
+    }
+  } catch (error) {
+    console.error("Strategy execution error:", error);
+    return {
+      success: false,
+      error: "Failed to execute deposit strategy",
+    };
+  }
 };
 
 export const systemTemplate = `

@@ -1,3 +1,4 @@
+import { ToNexusSmartAccountParameters } from './../../../node_modules/@biconomy/sdk/dist/_types/account/toNexusAccount.d';
 import { Request, Response } from "express";
 import { privateKeyToAccount } from "viem/accounts";
 import { z } from "zod";
@@ -10,16 +11,17 @@ import {
 } from "viem";
 import { base, polygon } from "viem/chains";
 import { getDepositStrategy } from "../../services/deflate-agent/strategy-handler";
-import { DEFLATE_PORTAL_ABI } from "../../utils/abis";
+import { DEFLATE_PORTAL_ABI, PORTAL_ABI } from "../../utils/abis";
 import { environment } from "../../config/environment";
 import {
-  BASE_DEFLATE_PORTAL_ADDRESS,
+  BASE_PORTAL_ADDRESS,
   BASE_USDC_ADDRESS,
   POLYGON_DEFLATE_PORTAL_ADDRESS,
 } from "../../utils/constants";
 import { redis } from "../../services/redis";
 import { sendTransactionWithSession } from "../../services/biconomy";
 import { SessionData } from "@biconomy/sdk";
+import { entryPoint07Abi } from "viem/_types/account-abstraction";
 // Define the input validation schema
 const depositSchema = z.object({
   userRiskProfile: z.string().array(),
@@ -106,8 +108,8 @@ export const createDeposit = async (req: Request, res: Response) => {
     //   JSON.parse(userData?.compressedSessionData as string) as SessionData,
     //   [
     //     {
-    //       target: BASE_USDC_ADDRESS,
-    //       callData: encodeFunctionData({
+    //       to: BASE_USDC_ADDRESS,
+    //       data: encodeFunctionData({
     //         abi: erc20Abi,
     //         functionName: "approve",
     //         args: [BASE_DEFLATE_PORTAL_ADDRESS as `0x${string}`, totalSupply],
@@ -128,7 +130,7 @@ export const createDeposit = async (req: Request, res: Response) => {
         const chain = tx.chainId === 8453 ? base : polygon;
         const deflatePortalAddress =
           tx.chainId === 8453
-            ? BASE_DEFLATE_PORTAL_ADDRESS
+            ? BASE_PORTAL_ADDRESS
             : POLYGON_DEFLATE_PORTAL_ADDRESS;
 
         const client = createWalletClient({
@@ -141,16 +143,14 @@ export const createDeposit = async (req: Request, res: Response) => {
           transport: http(),
         });
 
-        const { request } = await publicClient.simulateContract({
-          account: agentAccount,
-          address: deflatePortalAddress as `0x${string}`,
-          abi: DEFLATE_PORTAL_ABI,
-          functionName: "executeStrategy",
-          args: [tx.data],
+        const hash = await client.sendTransaction({
+          to: deflatePortalAddress as `0x${string}`,
+          abi: PORTAL_ABI,
+          functionName: "portal",
+          data: tx.data as `0x${string}`
         });
-        const txReceipt = await client.writeContract(request);
         const txReceiptData = await publicClient.waitForTransactionReceipt({
-          hash: txReceipt,
+          hash,
         });
 
         // Store successful transaction data

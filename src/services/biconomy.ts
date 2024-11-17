@@ -26,7 +26,7 @@ import { environment } from "../config/environment";
 
 export const sendTransactionWithSession = async (
   sessionData: SessionData,
-  calls: Execution[]
+  calls: Call[]
 ) => {
   try {
     console.log("----- sessionData", sessionData);
@@ -44,26 +44,12 @@ export const sendTransactionWithSession = async (
       chain: base,
       transport: http(),
       bundlerTransport: http(environment.BICONOMY_BASE_BUNDLER_URL),
-      paymaster: paymasterClient,
-      paymasterContext: {
-        mode: "SPONSORED",
-        expiryDuration: 300,
-        calculateGasLimits: true,
-        sponsorshipInfo: {
-          smartAccountInfo: {
-            name: "BICONOMY",
-            version: "2.0.0",
-          },
-        },
-      },
     });
 
     const usePermissionsModule = toSmartSessionsValidator({
       account: nexusClient.account,
       signer: agentAccount,
-      moduleData: {
-        permissionId: sessionData.moduleData.permissionId as Hex,
-      },
+      moduleData: sessionData.moduleData,
     });
 
     // Create base nexus client
@@ -73,18 +59,6 @@ export const sendTransactionWithSession = async (
       chain: base,
       transport: http(),
       bundlerTransport: http(environment.BICONOMY_BASE_BUNDLER_URL),
-      paymaster: paymasterClient,
-      paymasterContext: {
-        mode: "SPONSORED",
-        expiryDuration: 300,
-        calculateGasLimits: true,
-        sponsorshipInfo: {
-          smartAccountInfo: {
-            name: "BICONOMY",
-            version: "2.0.0",
-          },
-        },
-      },
       module: usePermissionsModule,
     });
 
@@ -93,7 +67,7 @@ export const sendTransactionWithSession = async (
       smartSessionUseActions(usePermissionsModule)
     );
     const userOpHash = await useSmartSessionNexusClient.usePermission({
-      actions: calls,
+      calls,
     });
     return useSmartSessionNexusClient;
   } catch (err) {
