@@ -43,31 +43,31 @@ const findStableLiquidityCross = async (userAddress: string) => {
     }
   ).then((res) => res.json())) as TransactionResponse;
 
-  const polygonUsdcLendingApy = (await fetch(
-    `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
-      },
-      body: JSON.stringify({
-        prompt:
-          "Give me investment advice for usdc on polygon with liquidity > 5 milions",
-        address: userAddress,
-      }),
-    }
-  ).then((res) => res.json())) as TransactionResponse;
+  // const polygonUsdcLendingApy = (await fetch(
+  //   `${BRIAN_API_BASE_URL}/api/v0/agent/transaction`,
+  //   {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       "x-brian-api-key": `${process.env.BRIAN_API_KEY}`,
+  //     },
+  //     body: JSON.stringify({
+  //       prompt:
+  //         "Give me investment advice for usdc on polygon with liquidity > 5 milions",
+  //       address: userAddress,
+  //     }),
+  //   }
+  // ).then((res) => res.json())) as TransactionResponse;
 
   return {
     baseStrategy: {
       description: baseUsdcLendingApy.result[0].data.description,
       chainId: baseUsdcLendingApy.result[0].data.fromChainId,
     },
-    polygonStrategy: {
-      description: polygonUsdcLendingApy.result[0].data.description,
-      chainId: polygonUsdcLendingApy.result[0].data.fromChainId,
-    },
+    // polygonStrategy: {
+    //   description: polygonUsdcLendingApy.result[0].data.description,
+    //   chainId: polygonUsdcLendingApy.result[0].data.fromChainId,
+    // },
   };
 };
 
@@ -163,7 +163,7 @@ export const getDepositStrategy = async ({
       case 1: {
         // 100% stable cross-chain
         const crossChainResults = await findStableLiquidityCross(userAddress);
-        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId})`;
+        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}).`;
         console.log(strategies, "strategies");
         break;
       }
@@ -171,7 +171,7 @@ export const getDepositStrategy = async ({
         // 50% stable cross-chain, 50% single
         const crossChainResults = await findStableLiquidityCross(userAddress);
         const singleResults = await findLiquiditySingle(userAddress);
-        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
+        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
         console.log(strategies, "strategies");
         break;
       }
@@ -179,7 +179,7 @@ export const getDepositStrategy = async ({
         // 20% stable cross-chain, 80% single
         const crossChainResults = await findStableLiquidityCross(userAddress);
         const singleResults = await findLiquiditySingle(userAddress);
-        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}), ${crossChainResults.polygonStrategy.description} (Chain ${crossChainResults.polygonStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
+        strategies = `Available stable pools: ${crossChainResults.baseStrategy.description} (Chain ${crossChainResults.baseStrategy.chainId}). Available volatile pools: ETH pool - ${singleResults.baseEth.description} (Chain ${singleResults.baseEth.chainId}), cbBTC pool - ${singleResults.baseCbBtc.description} (Chain ${singleResults.baseCbBtc.chainId})`;
         console.log(strategies, "strategies");
         break;
       }
